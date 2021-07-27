@@ -1,0 +1,18 @@
+#include "H5Composites/DataBufferTraits.h"
+#include "H5Composites/DTypes.h"
+
+namespace H5Composites {
+    template <typename T>
+    T Composite::get(const std::string& name) const
+    {
+        std::size_t idx = m_dtype.getMemberIndex(name);
+        return buffer_read_traits<T>::read(m_buffer.slot(idx), m_dtype.getMemberDataType(idx));
+    }
+
+    template <typename T>
+    void Composite::set(const std::string& name, const T& value)
+    {
+        std::size_t idx = m_dtype.getMemberIndex(name);
+        buffer_write_traits<T>::write(value, m_buffer.slot(idx), m_dtype.getMemberDataType(idx));
+    }
+}

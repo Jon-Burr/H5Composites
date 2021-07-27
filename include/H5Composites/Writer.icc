@@ -1,0 +1,19 @@
+#include "H5Composites/DataBufferTraits.h"
+
+namespace H5Composites {
+    template <typename T>
+    void Writer::write(const T& obj)
+    {
+        buffer_write_traits<T>::write(obj, m_buffer.get(m_nInBuffer*m_dtype.getSize()), m_dtype);
+        // If we've hit the cache size then flush to the output file
+        if (++m_nInBuffer == m_cacheSize)
+            flush();
+    }
+
+    template <typename Iterator>
+    void Writer::write(Iterator begin, Iterator end)
+    {
+        for (Iterator itr = begin; itr != end; ++itr)
+            write(*itr);
+    }
+} //> end namespace H5Composites

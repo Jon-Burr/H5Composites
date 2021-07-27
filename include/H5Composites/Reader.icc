@@ -1,0 +1,34 @@
+#include "H5Composites/DataBufferTraits.h"
+#include <type_traits>
+#include <iterator>
+
+namespace H5Composites {
+    template <typename T>
+    T Reader::read() const
+    {
+        return buffer_read_traits<T>::read(
+            m_cache.get(m_cachePosition*m_dtype.getSize()),
+            m_dtype
+        );
+    }
+
+    template <typename T, typename Iterator>
+    void Reader::readN(std::size_t N, Iterator outItr)
+    {
+        for (std::size_t idx = 0; idx < N; ++idx)
+        {
+            if (!next())
+                break;
+            *outItr++ = read<T>();
+        }
+    }
+
+    template <typename T>
+    std::vector<T> Reader::readN(std::size_t N)
+    {
+        std::vector<T> v;
+        v.reserve(N);
+        readN<T>(N, std::back_inserter(v));
+        return v;
+    }
+} //> end namespace H5Composites
