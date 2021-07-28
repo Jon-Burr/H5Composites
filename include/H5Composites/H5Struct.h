@@ -6,6 +6,7 @@
 #define H5COMPOSITES_H5STRUCT_H
 
 #include "H5Composites/DTypes.h"
+#include "boost/preprocessor.hpp"
 
 namespace H5Composites {
     /// Utility function used in macros to get the H5 type of a data member
@@ -69,7 +70,7 @@ namespace H5Composites {
         BOOST_PP_VARIADIC_TO_SEQ(MEMBERS)                               \
     )
 
-#define H5COMPOSITES_DECLARE_STRUCT_DTYPE   \
+#define H5COMPOSITES_DECLARE_STRUCT_DTYPE()   \
     static H5::DataType h5DType();
 
 #define H5COMPOSITES_DEFINE_STRUCT_DTYPE(STRUCT, MEMBERS...)    \
