@@ -9,7 +9,7 @@ namespace H5Composites {
 
     std::size_t IBufferWriter::byteAlignment() const { return alignOfDataType(h5DType()); }
 
-    void IBufferWriter::writeBuffer(void* buffer, const H5::DataType& dtype) const
+    void IBufferWriter::writeBuffer_wt(void* buffer, const H5::DataType& dtype) const
     {
         const H5::DataType& sourceDType = h5DType();
         if (dtype == sourceDType)

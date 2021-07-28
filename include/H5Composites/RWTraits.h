@@ -26,7 +26,7 @@ namespace H5Composites {
         )
         {
             T t(dtype);
-            t.readBuffer(buffer, dtype);
+            t.readBuffer_wt(buffer, dtype);
             return t;
         }
 
@@ -83,7 +83,7 @@ namespace H5Composites {
         static std::enable_if_t<std::is_base_of_v<IBufferWriter, U>, void> write(
             const T& t, void* buffer, const H5::DataType& dtype)
         {
-            t.writeBuffer(buffer, dtype);
+            t.writeBuffer_wt(buffer, dtype);
         }
 
         template <typename U=T>

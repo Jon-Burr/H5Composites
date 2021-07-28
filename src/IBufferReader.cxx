@@ -3,7 +3,7 @@
 #include "H5Composites/convert.h"
 
 namespace H5Composites {
-    void IBufferReader::readBuffer(const void* buffer, const H5::DataType& dtype)
+    void IBufferReader::readBuffer_wt(const void* buffer, const H5::DataType& dtype)
     {
         const H5::DataType& targetDType = h5DType();
         if (targetDType == dtype)
