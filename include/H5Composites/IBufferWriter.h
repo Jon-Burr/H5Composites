@@ -7,7 +7,7 @@
 namespace H5Composites {
     class IBufferWriter {
     public:
-        virtual ~IBufferWriter() = 0;
+        virtual ~IBufferWriter() {};
         std::size_t nBytes() const;
         virtual std::size_t byteAlignment() const;
         virtual void writeBuffer(void* buffer) const = 0;
