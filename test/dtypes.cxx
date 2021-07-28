@@ -3,7 +3,7 @@
 #include <boost/test/included/unit_test.hpp>
 #include "H5Composites/DTypes.h"
 #include "H5Composites/DataBuffer.h"
-#include "H5Composites/DataBufferTraits.h"
+#include "H5Composites/RWTraits.h"
 #include "H5Cpp.h"
 #include <array>
 

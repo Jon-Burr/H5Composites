@@ -1,4 +1,4 @@
-#include "H5Composites/DataBufferTraits.h"
+#include "H5Composites/RWTraits.h"
 #include <type_traits>
 #include <iterator>
 

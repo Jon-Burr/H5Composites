@@ -5,7 +5,7 @@
 #include <iostream>
 #include "H5Composites/DTypes.h"
 #include "H5Composites/convert.h"
-#include "H5Composites/DataBufferTraits.h"
+#include "H5Composites/RWTraits.h"
 #include "H5Composites/H5Struct.h"
 #include "H5Composites/DataBuffer.h"
 

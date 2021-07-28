@@ -1,5 +1,5 @@
-#ifndef H5COMPOSITES_DATABUFFERTRAITS_H
-#define H5COMPOSITES_DATABUFFERTRAITS_H
+#ifndef H5COMPOSITES_RWTRAITS_H
+#define H5COMPOSITES_RWTRAITS_H
 #include <type_traits>
 #include <cstring>
 #include "H5Composites/IBufferReader.h"
@@ -26,7 +26,7 @@ namespace H5Composites {
         )
         {
             T t(dtype);
-            t.read(buffer, dtype);
+            t.readBuffer(buffer, dtype);
             return t;
         }
 
@@ -107,4 +107,4 @@ namespace H5Composites {
     
 } //> end namespace H5Composites
 
-#endif //> !H5COMPOSITES_DATABUFFERTRAITS_H
+#endif //> !H5COMPOSITES_RWTRAITS_H

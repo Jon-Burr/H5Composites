@@ -5,7 +5,7 @@
 #define H5COMPOSITES_DATABUFFER_H
 
 #include <vector>
-#include "H5Composites/DataBufferTraits.h"
+#include "H5Composites/RWTraits.h"
 #include "H5Composites/SmartBuffer.h"
 #include "H5Cpp.h"
 

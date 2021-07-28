@@ -1,4 +1,4 @@
-#include "H5Composites/DataBufferTraits.h"
+#include "H5Composites/RWTraits.h"
 #include "H5Composites/DTypes.h"
 
 namespace H5Composites {
