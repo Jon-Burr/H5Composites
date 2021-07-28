@@ -17,12 +17,21 @@ namespace H5Composites {
     // Create the boost tti metafunctions
     BOOST_TTI_HAS_STATIC_MEMBER_FUNCTION(h5DType);
     BOOST_TTI_HAS_MEMBER_FUNCTION(h5DType);
+    BOOST_TTI_HAS_STATIC_MEMBER_FUNCTION(getType);
 
     template <typename T, bool _ = has_static_member_function_h5DType<T, H5::DataType>::value>
     struct H5DType;
 
     template <typename T>
-    H5::DataType getH5DType() { return H5DType<T>::getType(); }
+    static constexpr bool has_static_dtype_v = (
+        has_static_member_function_h5DType<T, H5::DataType()>::value ||
+        has_static_member_function_getType<H5DType<T>, H5::DataType()>::value);
+
+    template <typename T>
+    std::enable_if_t<has_static_member_function_getType<H5DType<T>, H5::DataType()>::value, H5::DataType> getH5DType()
+    { 
+        return H5DType<T>::getType();
+    }
 
     template <typename T>
     std::enable_if_t<has_static_member_function_h5DType<T, H5::DataType>::value, H5::DataType> getH5DType(const T& t)
@@ -31,9 +40,12 @@ namespace H5Composites {
     }
 
     template <typename T>
-    std::enable_if_t<!has_static_member_function_h5DType<T, H5::DataType>::value, H5::DataType> getH5DType(const T&)
+    std::enable_if_t<!has_static_member_function_h5DType<T, H5::DataType>::value, H5::DataType> getH5DType(const T& t)
     {
-        return getH5DType<T>();
+        if constexpr (has_static_member_function_getType<H5DType<T>, H5::DataType()>::value)
+            return getH5DType<T>();
+        else
+            return H5DType<T>::getType(t);
     }
 
     template <>

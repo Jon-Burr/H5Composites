@@ -32,5 +32,9 @@ add_executable(test_io test/io.cxx)
 target_link_libraries(test_io PRIVATE H5Composites Boost::unit_test_framework)
 add_test(io test_io)
 
+add_executable(test_flvector test/flvector.cxx)
+target_link_libraries(test_flvector PRIVATE H5Composites Boost::unit_test_framework)
+add_test(flvector test_flvector)
+
 add_executable(playground util/test.cxx)
 target_link_libraries(playground PRIVATE H5Composites)
