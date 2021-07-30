@@ -51,7 +51,7 @@ namespace H5Composites {
  * @endcode
  * would be equivalent to
  * @code{.cpp}
- * H5::CompType particleDType(sizeof(Particle))
+ * static H5::CompType particleDType(sizeof(Particle))
  * particleDType.insertMember("ID", HOFFSET(Particle, ID), H5::NATIVE_INT);
  * particleDType.insertMember("pt", HOFFSET(Particle, pt), H5::NATIVE_FLOAT);
  * particleDType.insertMember("eta", HOFFSET(Particle, eta), H5::NATIVE_FLOAT);
@@ -63,12 +63,16 @@ namespace H5Composites {
         std::is_standard_layout<STRUCT>::value,                         \
         "H5Structs can only be defined for standard layout objects"     \
     );                                                                  \
-    H5::CompType DTYPE(sizeof(STRUCT));                                 \
-    BOOST_PP_SEQ_FOR_EACH(                                              \
-        H5COMPOSITES_INSERT_STRUCT_MEMBER,                              \
-        (DTYPE, STRUCT),                                                \
-        BOOST_PP_VARIADIC_TO_SEQ(MEMBERS)                               \
-    )
+    static H5::CompType DTYPE(sizeof(STRUCT));                          \
+    {static bool init = false;                                          \
+    if (!init)                                                          \
+    {                                                                   \
+        BOOST_PP_SEQ_FOR_EACH(                                          \
+            H5COMPOSITES_INSERT_STRUCT_MEMBER,                          \
+            (DTYPE, STRUCT),                                            \
+            BOOST_PP_VARIADIC_TO_SEQ(MEMBERS)                           \
+        )                                                               \
+    init=true;}}                                                        
 
 #define H5COMPOSITES_DECLARE_STRUCT_DTYPE()   \
     static H5::DataType h5DType();
