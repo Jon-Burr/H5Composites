@@ -19,6 +19,19 @@ namespace H5Composites {
     BOOST_TTI_HAS_MEMBER_FUNCTION(h5DType);
     BOOST_TTI_HAS_STATIC_MEMBER_FUNCTION(getType);
 
+    /**
+     * @brief Provide a way for trait types to wrap another type
+     * 
+     * The main use here is for the FLVector and FLString types
+     */
+    template <typename T>
+    struct UnderlyingType
+    {
+        using type = T;
+    };
+    template <typename T>
+    using UnderlyingType_t = typename UnderlyingType<T>::type;
+
     template <typename T, bool _ = has_static_member_function_h5DType<T, H5::DataType>::value>
     struct H5DType;
 
@@ -34,13 +47,19 @@ namespace H5Composites {
     }
 
     template <typename T>
-    std::enable_if_t<has_static_member_function_h5DType<T, H5::DataType>::value, H5::DataType> getH5DType(const T& t)
+    std::enable_if_t<
+        has_static_member_function_h5DType<T, H5::DataType>::value ||
+        has_member_function_h5DType<const UnderlyingType_t<T>, H5::DataType>::value,
+        H5::DataType> getH5DType(const UnderlyingType_t<T>& t)
     {
         return t.h5DType();
     }
 
     template <typename T>
-    std::enable_if_t<!has_static_member_function_h5DType<T, H5::DataType>::value, H5::DataType> getH5DType(const T& t)
+    std::enable_if_t<
+        !has_static_member_function_h5DType<T, H5::DataType>::value &&
+        !has_member_function_h5DType<const UnderlyingType_t<T>, H5::DataType>::value,
+        H5::DataType> getH5DType(const UnderlyingType_t<T>& t)
     {
         if constexpr (has_static_member_function_getType<H5DType<T>, H5::DataType()>::value)
             return getH5DType<T>();
@@ -90,6 +109,7 @@ namespace H5Composites {
     struct H5DType<T, true> {
         static H5::DataType getType() { return T::h5DType(); }
     };
+
 } //> end namespace H5Composites
 
 #endif //> !H5COMPOSITES_DTYPES_H

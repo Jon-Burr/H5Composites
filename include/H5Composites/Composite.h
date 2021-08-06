@@ -22,7 +22,7 @@ namespace H5Composites {
         const DataBuffer& dataBuffer() { return m_buffer; }
 
         /// Get the datatype
-        const H5::DataType& h5DType() const override { return m_dtype; }
+        H5::DataType h5DType() const override { return m_dtype; }
 
         /// Read data from a buffer
         void readBuffer(const void* buffer) override;

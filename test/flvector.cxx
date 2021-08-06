@@ -1,4 +1,4 @@
-#define BOOST_TEST_MODULE io
+#define BOOST_TEST_MODULE flvector
 
 #include <boost/test/included/unit_test.hpp>
 #include "H5Composites/FixedLengthVectorTraits.h"
@@ -28,24 +28,24 @@ BOOST_AUTO_TEST_CASE(primitive_types)
     hsize_t size = v1.size();
     H5::DataType arrType = H5::ArrayType(getH5DType<std::size_t>(), 1, &size);
     // Test datatype creation
-    BOOST_TEST(getH5DType(v1) == arrType);
+    BOOST_TEST(getH5DType<FLVector<std::size_t>>(v1) == arrType);
 
     // test reading
-    std::vector<std::size_t> v2 = buffer_read_traits<std::vector<std::size_t>>::read(v1.data(), arrType);
+    std::vector<std::size_t> v2 = buffer_read_traits<FLVector<std::size_t>>::read(v1.data(), arrType);
     BOOST_TEST(v1 == v2);
 
     // test writing
     std::vector<std::size_t> v3(size, 0);
-    buffer_write_traits<std::vector<std::size_t>>::write(v1, v3.data(), arrType);
+    buffer_write_traits<FLVector<std::size_t>>::write(v1, v3.data(), arrType);
     BOOST_TEST(v1 == v3);
 
     // test conversion on read
     std::vector<float> vf1(v1.begin(), v1.end());
-    std::vector<float> vf2 = buffer_read_traits<std::vector<float>>::read(v1.data(), arrType);
+    std::vector<float> vf2 = buffer_read_traits<FLVector<float>>::read(v1.data(), arrType);
     BOOST_TEST(vf1 == vf2);
     // test conversion on write
     std::vector<float> vf3(size, 0);
-    buffer_write_traits<std::vector<std::size_t>>::write(v1, vf3.data(), getH5DType(vf3));
+    buffer_write_traits<FLVector<std::size_t>>::write(v1, vf3.data(), getH5DType<FLVector<float>>(vf3));
     BOOST_TEST(vf1 == vf3);
 
 }

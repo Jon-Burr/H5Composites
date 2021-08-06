@@ -8,7 +8,7 @@ namespace H5Composites {
     public:
         virtual ~IBufferReader() {};
         virtual void readBuffer(const void* buffer) = 0;
-        virtual const H5::DataType& h5DType() const = 0;
+        virtual H5::DataType h5DType() const = 0;
         virtual void readBuffer_wt(const void* buffer, const H5::DataType& dtype);
     }; //> end class IBufferReader
 } //> end namespace H5Composites

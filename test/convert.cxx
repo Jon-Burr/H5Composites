@@ -8,6 +8,7 @@
 #include "H5Composites/RWTraits.h"
 #include "H5Composites/H5Struct.h"
 #include "H5Composites/DataBuffer.h"
+#include "H5Composites/DTypePrinter.h"
 
 void print_bytes(const void *ptr, int size) 
 {
@@ -40,8 +41,8 @@ std::ostream& operator<<(std::ostream& os, const Test1& t)
 }
 
 struct Test2 {
-    int i;
     float f;
+    int i;
     Test2() = default;
     Test2(const Test1& other) :
         f(static_cast<float>(other.f)),
@@ -58,7 +59,6 @@ std::ostream& operator<<(std::ostream& os, const Test2& t)
 {
     return os << "f: " << t.f << ", i: " << t.i;
 }
-
 
 BOOST_AUTO_TEST_CASE(primitive_types)
 {
@@ -87,6 +87,7 @@ BOOST_AUTO_TEST_CASE(struct_types)
 {
     using namespace H5Composites;
     Test1 t1{-0.32, 42};
+    std::cout << "test read " << t1.h5DType() << std::endl;
     Test1 t1a = buffer_read_traits<Test1>::read(&t1, getH5DType<Test1>());
     BOOST_TEST(t1 == t1a);
     Test2 t2 = t1;
@@ -104,7 +105,8 @@ BOOST_AUTO_TEST_CASE(struct_types)
     print_bytes(db2.slot(0), db2.layout().at(1) - db2.layout().at(0));
     print_bytes(db2.slot(1), db2.layout().at(2) - db2.layout().at(1));
 
-    SmartBuffer buffer = convert(&t1, getH5DType<Test1>(), getH5DType<Test2>());
+    std::cout << canConvert(getH5DType<Test1>(), getH5DType<Test2>()) << std::endl;
+    SmartBuffer buffer = convert(&t1, getH5DType<Test1>(), getH5DType<Test2>(), true);
     print_bytes(buffer.get(), sizeof(Test2));
 
     Test2 t2b;
@@ -116,6 +118,9 @@ BOOST_AUTO_TEST_CASE(struct_types)
     print_bytes(t2b);
     print_bytes(Test2(t1));
     BOOST_TEST(t2 == Test2(t1));
+
+    BOOST_TEST((canConvert(Test2::h5DType(), Test1::h5DType())) == true);
+    BOOST_TEST((canConvert(Test1::h5DType(), H5::PredType::NATIVE_INT)) == false);
 }
 #if 0
 void print_bytes(const void *ptr, int size) 
@@ -204,7 +209,7 @@ int main()
     std::free(background);
     buf = std::malloc(sizeof(vd));
     std::memcpy(buf, &vd, sizeof(vd));
-    H5Composites::getH5DType(vd).convert(H5Composites::getH5DType(vf), 1, buf, nullptr);
+    H5Composites::getH5DType<std::array<double, 3>>().convert(H5Composites::getH5DType<std::array<float, 3>>(), 1, buf, nullptr);
     std::memcpy(&vf, buf, sizeof(vf));
     print_bytes(vf);
     std::cout << vf << std::endl;

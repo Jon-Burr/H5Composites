@@ -1,0 +1,35 @@
+#include <boost/preprocessor.hpp>
+#include <bitset>
+#include <stdexcept>
+
+#define H5COMPOSITES_DETAIL_DISPATCH_ELEM(r, DATA, ELEM)                                        \
+    if (dtype == H5::PredType::BOOST_PP_TUPLE_ELEM(0, ELEM))                                    \
+        return F<BOOST_PP_TUPLE_ELEM(1, ELEM)>()(std::forward<Args&&>(args)...);
+
+namespace H5Composites {
+    template <template <typename> class F, typename... Args>
+    std::result_of_t<F<int>(Args...)> apply(const H5::PredType& dtype, Args&&... args)
+    {
+        BOOST_PP_SEQ_FOR_EACH(
+            H5COMPOSITES_DETAIL_DISPATCH_ELEM, ~,
+            ((NATIVE_CHAR, char))
+            ((NATIVE_SHORT, short))
+            ((NATIVE_INT, int))
+            ((NATIVE_LONG, long))
+            ((NATIVE_LLONG, long long))
+            ((NATIVE_UCHAR, unsigned char))
+            ((NATIVE_USHORT, unsigned short))
+            ((NATIVE_UINT, unsigned int))
+            ((NATIVE_ULONG, unsigned long))
+            ((NATIVE_ULLONG, unsigned long long))
+            ((NATIVE_FLOAT, float))
+            ((NATIVE_DOUBLE, double))
+            ((NATIVE_LDOUBLE, long double))
+        )
+        throw H5::DataTypeIException("Not a native type!");
+#if 0
+        if constexpr(!std::is_void_v<std::result_of_t<F<int>(Args...)>>)
+            return std::declval<std::result_of_t<F<int>(Args...)>>();
+#endif
+    }
+}

@@ -8,40 +8,53 @@
 #include "H5Composites/convert.h"
 #include "H5Cpp.h"
 
-// TODO: datatype conversions
-
 namespace H5Composites {
     template <typename T>
     struct buffer_read_traits
     {
         static_assert(
-            (std::is_base_of_v<IBufferReader, T> && std::is_constructible_v<T, const H5::DataType&>) ||
-            (!std::is_base_of_v<IBufferReader, T> && std::is_pod_v<T>),
+            (std::is_base_of_v<IBufferReader, UnderlyingType_t<T>> && std::is_constructible_v<UnderlyingType_t<T>, const H5::DataType&>) ||
+            (!std::is_base_of_v<IBufferReader, UnderlyingType_t<T>> && std::is_pod_v<UnderlyingType_t<T>>),
             "Default implementation only valid for POD classes or IBufferReader instances constructible from a const H5::DataType&"
         );
 
-        template <typename U=T>
+        template <typename U=UnderlyingType_t<T>>
+        static std::enable_if_t<std::is_base_of_v<IBufferReader, U>, U> init(
+            const H5::DataType& dtype
+        )
+        {
+            return U(dtype);
+        }
+
+        template <typename U=UnderlyingType_t<T>>
+        static std::enable_if_t<!std::is_base_of_v<IBufferReader, U>, U> init(
+            const H5::DataType&
+        )
+        {
+            return U{};
+        }
+
+        template <typename U=UnderlyingType_t<T>>
         static std::enable_if_t<std::is_base_of_v<IBufferReader, U>, U> read(
             const void* buffer, const H5::DataType& dtype
         )
         {
-            T t(dtype);
-            t.readBuffer_wt(buffer, dtype);
-            return t;
+            U u = init(dtype);
+            u.readBuffer_wt(buffer, dtype);
+            return u;
         }
 
-        template <typename U=T>
+        template <typename U=UnderlyingType_t<T>>
         static std::enable_if_t<!std::is_base_of_v<IBufferReader, U>, U> read(
             const void* buffer, const H5::DataType& dtype
         )
         {
             const H5::DataType& targetDType = getH5DType<T>();
             if (dtype == targetDType)
-                return *reinterpret_cast<const T*>(buffer);
+                return *reinterpret_cast<const U*>(buffer);
             else
             {
-                T val = *reinterpret_cast<const T*>(convert(buffer, dtype, targetDType).get());
-                return val;
+                return *reinterpret_cast<const U*>(convert(buffer, dtype, targetDType).get());
             }
         }
 
@@ -52,53 +65,53 @@ namespace H5Composites {
     struct buffer_write_traits
     {
         static_assert(
-            std::is_base_of_v<IBufferWriter, T> || std::is_standard_layout_v<T>,
+            std::is_base_of_v<IBufferWriter, UnderlyingType_t<T>> || std::is_standard_layout_v<UnderlyingType_t<T>>,
             "Default implementation only valid for IBufferWriter instances or standard layout classes"
         );
-        template <typename U=T>
-        static std::enable_if_t<std::is_base_of_v<IBufferWriter, U>, std::size_t> nBytes(const T& t)
+        template <typename U=UnderlyingType_t<T>>
+        static std::enable_if_t<std::is_base_of_v<IBufferWriter, U>, std::size_t> nBytes(const U& u)
         {
-            return t.nBytes();
+            return u.nBytes();
         }
 
-        template <typename U=T>
-        static constexpr std::enable_if_t<!std::is_base_of_v<IBufferWriter, U>, std::size_t> nBytes(const T&)
+        template <typename U=UnderlyingType_t<T>>
+        static constexpr std::enable_if_t<!std::is_base_of_v<IBufferWriter, U>, std::size_t> nBytes(const U&)
         {
-            return sizeof(T);
+            return sizeof(U);
         }
 
-        template <typename U=T>
-        static std::enable_if_t<std::is_base_of_v<IBufferWriter, U>, std::size_t> byteAlignment(const T& t)
+        template <typename U=UnderlyingType_t<T>>
+        static std::enable_if_t<std::is_base_of_v<IBufferWriter, U>, std::size_t> byteAlignment(const U& u)
         {
-            return t.byteAlignment();
+            return u.byteAlignment();
         }
 
-        template <typename U=T>
-        static constexpr std::enable_if_t<!std::is_base_of_v<IBufferWriter, U>, std::size_t> byteAlignment(const T&)
+        template <typename U=UnderlyingType_t<T>>
+        static constexpr std::enable_if_t<!std::is_base_of_v<IBufferWriter, U>, std::size_t> byteAlignment(const U&)
         {
-            return alignof(T);
+            return alignof(U);
         }
 
-        template <typename U=T>
+        template <typename U=UnderlyingType_t<T>>
         static std::enable_if_t<std::is_base_of_v<IBufferWriter, U>, void> write(
-            const T& t, void* buffer, const H5::DataType& dtype)
+            const U& u, void* buffer, const H5::DataType& dtype)
         {
-            t.writeBuffer_wt(buffer, dtype);
+            u.writeBuffer_wt(buffer, dtype);
         }
 
-        template <typename U=T>
+        template <typename U=UnderlyingType_t<T>>
         static std::enable_if_t<!std::is_base_of_v<IBufferWriter, U>, void> write(
-            const T& t, void* buffer, const H5::DataType& dtype)
+            const U& u, void* buffer, const H5::DataType& dtype)
         {
-            const H5::DataType& sourceDType = getH5DType(t);
+            const H5::DataType& sourceDType = getH5DType<T>(u);
             if (sourceDType == dtype)
-                std::memcpy(buffer, &t, sizeof(T));
+                std::memcpy(buffer, &u, sizeof(T));
             else
             {
                 // Create a temporary buffer containing the converted value
                 std::memcpy(
                     buffer,
-                    convert(&t, sourceDType, dtype).get(),
+                    convert(&u, sourceDType, dtype).get(),
                     dtype.getSize()
                 );
             }

@@ -11,7 +11,7 @@ namespace H5Composites {
         std::size_t nBytes() const;
         virtual std::size_t byteAlignment() const;
         virtual void writeBuffer(void* buffer) const = 0;
-        virtual const H5::DataType& h5DType() const = 0;
+        virtual H5::DataType h5DType() const = 0;
         virtual void writeBuffer_wt(void* buffer, const H5::DataType& dtype) const;
     }; //> end class IBufferWriter
 } //> end namespace H5Composites
