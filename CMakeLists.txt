@@ -18,6 +18,7 @@ add_library(H5Composites
     src/Reader.cxx
     src/SmartBuffer.cxx
     src/MergeRules.cxx
+    src/MergeUtils.cxx
     src/Writer.cxx)
 target_include_directories(H5Composites PUBLIC include ${HDF5_INCLUDE_DIRS})
 target_link_libraries(H5Composites PUBLIC ${HDF5_LIBRARIES} Boost::boost)

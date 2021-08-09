@@ -40,6 +40,11 @@ namespace H5Composites {
         const void* source,
         const H5::DataType& sourceDType);
 
+    bool match(
+        const void* lhsBuffer,
+        const H5::DataType& lhsDType,
+        const void* rhsBuffer,
+        const H5::DataType& rhsDType);
 }
 
 #endif //> !H5COMPOSITES_MERGERULES_H

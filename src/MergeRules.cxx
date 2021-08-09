@@ -8,6 +8,7 @@
 #include <vector>
 #include <tuple>
 #include <string>
+#include <cstring>
 
 namespace {
 
@@ -172,5 +173,16 @@ namespace H5Composites {
                     break;
             }
         }
+    }
+
+    bool match(
+        const void* lhsBuffer,
+        const H5::DataType& lhsDType,
+        const void* rhsBuffer,
+        const H5::DataType& rhsDType)
+    {
+        // NB: This won't work for VLen data types, also not handling conversions
+        // also doesn't handle padding (so will need to fix that more urgently than the other things)
+        return lhsDType == rhsDType && (std::memcmp(lhsBuffer, rhsBuffer, lhsDType.getSize()) == 0);
     }
 } //> end namespace H5Composites
