@@ -4,24 +4,6 @@
 #include <sstream>
 #include <stdexcept>
 #include <vector>
-
-#include <iostream>
-namespace {
-    template <typename T>
-    std::ostream& operator<<(std::ostream& os, const std::vector<T>& v)
-    {
-        os << "[";
-        if (v.size() > 0)
-        {
-            auto itr = v.begin();
-            os << *itr++;
-            for (; itr != v.end(); ++itr)
-                os << ", " << *itr;
-        }
-        return os << "]";
-    }
-}
-
 namespace H5Composites {
     void extendDataset(
         H5::DataSet& target,
@@ -58,7 +40,6 @@ namespace H5Composites {
         std::vector<hsize_t> targetMaxDims(nDims, 0);
         sourceSpace.getSimpleExtentDims(sourceDims.data());
         targetSpace.getSimpleExtentDims(targetDims.data(), targetMaxDims.data());
-        std::cout << "merging " << sourceDims << " into " << targetDims << std::endl;
         std::vector<hsize_t> newTargetDims(targetDims);
         hsize_t nRowElements = 1;
         for (hsize_t idx = 0; idx < nDims; ++idx)
@@ -86,7 +67,6 @@ namespace H5Composites {
                 nRowElements *= sourceDims[idx];
             }
         }
-        std::cout << "New size is " << newTargetDims << std::endl;
         targetSpace.setExtentSimple(newTargetDims.size(), newTargetDims.data());
         target.extend(newTargetDims.data());
         std::size_t rowSize = nRowElements *= target.getDataType().getSize();
@@ -109,15 +89,12 @@ namespace H5Composites {
             sourceSize[mergeAxis] = nRowsToWrite;
             // Select the right bit of each dataset
             sourceSpace.selectNone();
-            std::cout << "Select source " << sourceSize << " starting from " << sourceOffset << std::endl;
             sourceSpace.selectHyperslab(
                 H5S_SELECT_SET,
                 sourceSize.data(),
                 sourceOffset.data()
             );
             targetSpace.selectNone();
-            std::cout << "Select target " << sourceSize << " starting from " << targetOffset << std::endl;
-            std::cout << "Target max = " << targetMaxDims << std::endl;
             targetSpace.selectHyperslab(
                 H5S_SELECT_SET,
                 sourceSize.data(),
