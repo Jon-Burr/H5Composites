@@ -1,0 +1,28 @@
+#include "H5Composites/DTypes.h"
+#include "H5Composites/SmartBuffer.h"
+#include "H5Composites/RWTraits.h"
+
+namespace H5Composites {
+    template <typename T>
+    Handle<T>::Handle(H5::Group& group, const std::string& name, const T& value) :
+        m_targetGroup(group),
+        m_name(name),
+        m_value(value)
+    {}
+
+    template <typename T>
+    Handle<T>::~Handle()
+    {
+        H5::DataType dtype = getH5DType<T>(m_value);
+        SmartBuffer buffer(dtype.getSize());
+        buffer_write_traits<T>::write(m_value, buffer.get(), dtype);
+        m_targetGroup.createDataSet(m_name, dtype, H5::DataSpace()).write(buffer.get(), dtype);
+    }
+
+    template <typename T>
+    Handle<T>::Handle(Handle&& other) :
+        m_targetGroup(other.m_targetGroup),
+        m_name(std::move(other.m_name)),
+        m_value(std::move(other.value))
+    {}
+}
