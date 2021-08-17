@@ -13,16 +13,22 @@ namespace H5Composites {
     template <typename T>
     Handle<T>::~Handle()
     {
-        H5::DataType dtype = getH5DType<T>(m_value);
-        SmartBuffer buffer(dtype.getSize());
-        buffer_write_traits<T>::write(m_value, buffer.get(), dtype);
-        m_targetGroup.createDataSet(m_name, dtype, H5::DataSpace()).write(buffer.get(), dtype);
+        if (enabled())
+        {
+            H5::DataType dtype = getH5DType<T>(m_value);
+            SmartBuffer buffer(dtype.getSize());
+            buffer_write_traits<T>::write(m_value, buffer.get(), dtype);
+            m_targetGroup.createDataSet(m_name, dtype, H5::DataSpace()).write(buffer.get(), dtype);
+        }
     }
 
     template <typename T>
     Handle<T>::Handle(Handle&& other) :
         m_targetGroup(other.m_targetGroup),
         m_name(std::move(other.m_name)),
-        m_value(std::move(other.value))
-    {}
+        m_value(std::move(other.m_value))
+    {
+        // Stop the old handle from writing on destruct
+        other.disable();
+    }
 }
