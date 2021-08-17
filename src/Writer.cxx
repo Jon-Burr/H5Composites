@@ -28,6 +28,18 @@ namespace H5Composites {
         );
     }
 
+    Writer::Writer(Writer&& other)
+    {
+        m_dtype = std::move(other.m_dtype);
+        m_cacheSize = other.m_cacheSize;
+        m_dataset = std::move(other.m_dataset);
+        m_offset = other.m_offset;
+        m_nInBuffer = other.m_nInBuffer;
+        m_buffer = std::move(other.m_buffer);
+        // Clear the other to prevent it from writing anything to the file
+        other.clear();
+    }
+
     Writer::~Writer() {
         flush();
     }

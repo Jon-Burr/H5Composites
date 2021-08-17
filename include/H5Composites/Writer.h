@@ -13,6 +13,12 @@ namespace H5Composites {
             H5::DataType dtype,
             std::size_t cacheSize = 2048);
         
+        /// Move constructor
+        Writer(Writer&& other);
+
+        /// Explicitly disable copying
+        Writer(const Writer&) = delete;
+        
         virtual ~Writer();
 
         /// Reset the buffer position. Discards all data

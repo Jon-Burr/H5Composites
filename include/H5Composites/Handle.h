@@ -17,6 +17,10 @@ namespace H5Composites {
         Handle(const Handle& other) = delete;
         Handle(Handle&& other);
 
+        bool enabled() const { return m_enabled; }
+        void disable() { m_enabled = false; }
+        void enable() { m_enabled = true; }
+
         T& operator*() { return m_value; }
         const T& operator*() const { return m_value; }
         T* operator->() { return &m_value; }
@@ -25,6 +29,7 @@ namespace H5Composites {
         H5::Group& m_targetGroup;
         std::string m_name;
         T m_value;
+        bool m_enabled{true};
     }; //> end class Handle<T>
 
     template <typename T>
