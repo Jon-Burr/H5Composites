@@ -1,6 +1,7 @@
 #include "H5Composites/Writer.h"
 #include "H5Composites/convert.h"
 #include <cstring>
+#include <stdexcept>
 
 namespace H5Composites {
     Writer::Writer(
