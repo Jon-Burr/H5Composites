@@ -9,6 +9,7 @@
 #include <vector>
 #include <string>
 #include <numeric>
+#include <stdexcept>
 
 
 namespace H5Composites
