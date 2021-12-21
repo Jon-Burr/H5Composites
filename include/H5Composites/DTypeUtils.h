@@ -16,7 +16,8 @@
 #include <vector>
 #include <iterator>
 
-namespace H5Composites {
+namespace H5Composites
+{
 
     /**
      * @brief Returns whether or not the data type is atomic
@@ -58,7 +59,7 @@ namespace H5Composites {
     /// Describes the safety of conversions between data types
     enum class AtomDTypeComparison
     {
-        SamePrecision, ///< The two data types hold the same information
+        SamePrecision,  ///< The two data types hold the same information
         LHSMorePrecise, ///< The domain of the LHS data-type contains the domain of the RHS data-type
         RHSMorePrecise, ///< The domain of the RHS data-type contains the domain of the LHS data-type
         DisjointDomains ///< The domains are disjoint (i.e. no safe conversion exists)
@@ -103,6 +104,8 @@ namespace H5Composites {
      */
     AtomDTypeComparison compareDTypes(const H5::FloatType &lhs, const H5::IntType &rhs);
 
+    std::map<std::string, long> getEnumValues(const H5::EnumType &enum, std::size_t nameSize = 100);
+
     /**
      * @brief Get the smallest common native data type to all the provided data types
      * 
@@ -116,8 +119,7 @@ namespace H5Composites {
      * String data types should not be passed to this function 
      */
     H5::PredType getCommonNativeDType(
-        const std::vector<H5::DataType> &dtypes
-    );
+        const std::vector<H5::DataType> &dtypes);
 
     /**
      * @brief Get the smallest common string data type to all the provided data types
@@ -142,7 +144,7 @@ namespace H5Composites {
      * without any loss of precision.
      */
     H5::ArrayType getCommonArrayDType(const std::vector<H5::ArrayType> &dtypes);
-    
+
     /**
      * @brief Get the smallest common compound data type to all the provided data types
      * 

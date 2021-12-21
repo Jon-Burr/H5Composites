@@ -18,9 +18,10 @@
 
 namespace
 {
-    struct AtomTypeInfo {
+    struct AtomTypeInfo
+    {
         AtomTypeInfo() = default;
-        AtomTypeInfo(const H5::IntType& dtype)
+        AtomTypeInfo(const H5::IntType &dtype)
         {
             if (dtype.getSign() == H5T_SGN_2)
             {
@@ -39,7 +40,7 @@ namespace
         }
         AtomTypeInfo(const H5::DataType &dtype)
         {
-            switch(dtype.getClass())
+            switch (dtype.getClass())
             {
             case H5T_INTEGER:
                 *this = H5::IntType(dtype.getId());
@@ -50,8 +51,7 @@ namespace
             default:
                 throw H5::DataTypeIException(
                     "H5Composites::AtomTypeInfo",
-                    "Invalid type passed to function"
-                );
+                    "Invalid type passed to function");
             }
         }
         /// Size of the part of the data type used for storing integers (mantissa for floats)
@@ -66,6 +66,7 @@ namespace
             intPrecision = std::max(intPrecision, other.intPrecision);
             exponent = std::max(exponent, other.exponent);
             isSigned |= other.isSigned;
+            return *this;
         }
 
         H5::DataType createDType()
@@ -99,10 +100,9 @@ namespace
 
     bool operator>=(const AtomTypeInfo &lhs, const AtomTypeInfo &rhs)
     {
-        return 
-            lhs.intPrecision >= rhs.intPrecision &&
-            lhs.exponent >= rhs.exponent &&
-            (lhs.isSigned || !rhs.isSigned);
+        return lhs.intPrecision >= rhs.intPrecision &&
+               lhs.exponent >= rhs.exponent &&
+               (lhs.isSigned || !rhs.isSigned);
     }
 
     template <typename Iterator>
@@ -112,8 +112,8 @@ namespace
         out.reserve(std::distance(begin, end));
         std::transform(
             begin, end, std::back_inserter(out),
-            [] (const H5::DataType &parent) { return parent.getSuper(); }
-        );
+            [](const H5::DataType &parent)
+            { return parent.getSuper(); });
         return out;
     }
 
@@ -124,13 +124,13 @@ namespace
         out.reserve(std::distance(begin, end));
         std::transform(
             begin, end, std::back_inserter(out),
-            [] (const H5::DataType &dtype) { return dtype.getId(); }
-        );
+            [](const H5::DataType &dtype)
+            { return dtype.getId(); });
         return out;
     }
 
     template <typename T>
-    bool enforceEqual(std::optional<T> &currentValue, const T& newValue)
+    bool enforceEqual(std::optional<T> &currentValue, const T &newValue)
     {
         if (currentValue.has_value())
         {
@@ -143,17 +143,18 @@ namespace
     }
 }
 
-namespace H5Composites {
+namespace H5Composites
+{
     bool isAtomicDType(const H5::DataType &dtype)
     {
-        switch(dtype.getClass())
+        switch (dtype.getClass())
         {
-            case H5T_INTEGER:
-            case H5T_FLOAT:
-            case H5T_BITFIELD:
-                return true;
-            default:
-                return false;
+        case H5T_INTEGER:
+        case H5T_FLOAT:
+        case H5T_BITFIELD:
+            return true;
+        default:
+            return false;
         }
     }
 
@@ -162,27 +163,45 @@ namespace H5Composites {
         hid_t native_id = H5Tget_native_type(dtype.getId(), H5T_DIR_ASCEND);
         // Create a very basic struct definition whose only purpose is to close this ID at the
         // end of the function
-        struct close_id {
+        struct close_id
+        {
             ~close_id() { H5Tclose(id); }
             hid_t id;
         } closer = {native_id};
-        if (H5Tequal(native_id, H5T_NATIVE_CHAR)) return H5::PredType::NATIVE_CHAR;
-        if (H5Tequal(native_id, H5T_NATIVE_SHORT)) return H5::PredType::NATIVE_SHORT;
-        if (H5Tequal(native_id, H5T_NATIVE_INT)) return H5::PredType::NATIVE_INT;
-        if (H5Tequal(native_id, H5T_NATIVE_LONG)) return H5::PredType::NATIVE_LONG;
-        if (H5Tequal(native_id, H5T_NATIVE_LLONG)) return H5::PredType::NATIVE_LLONG;
-        if (H5Tequal(native_id, H5T_NATIVE_UCHAR)) return H5::PredType::NATIVE_UCHAR;
-        if (H5Tequal(native_id, H5T_NATIVE_USHORT)) return H5::PredType::NATIVE_USHORT;
-        if (H5Tequal(native_id, H5T_NATIVE_UINT)) return H5::PredType::NATIVE_UINT;
-        if (H5Tequal(native_id, H5T_NATIVE_ULONG)) return H5::PredType::NATIVE_ULONG;
-        if (H5Tequal(native_id, H5T_NATIVE_ULLONG)) return H5::PredType::NATIVE_ULLONG;
-        if (H5Tequal(native_id, H5T_NATIVE_FLOAT)) return H5::PredType::NATIVE_FLOAT;
-        if (H5Tequal(native_id, H5T_NATIVE_DOUBLE)) return H5::PredType::NATIVE_DOUBLE;
-        if (H5Tequal(native_id, H5T_NATIVE_LDOUBLE)) return H5::PredType::NATIVE_LDOUBLE;
-        if (H5Tequal(native_id, H5T_NATIVE_B8)) return H5::PredType::NATIVE_B8;
-        if (H5Tequal(native_id, H5T_NATIVE_B16)) return H5::PredType::NATIVE_B16;
-        if (H5Tequal(native_id, H5T_NATIVE_B32)) return H5::PredType::NATIVE_B32;
-        if (H5Tequal(native_id, H5T_NATIVE_B64)) return H5::PredType::NATIVE_B64;
+        if (H5Tequal(native_id, H5T_NATIVE_CHAR))
+            return H5::PredType::NATIVE_CHAR;
+        if (H5Tequal(native_id, H5T_NATIVE_SHORT))
+            return H5::PredType::NATIVE_SHORT;
+        if (H5Tequal(native_id, H5T_NATIVE_INT))
+            return H5::PredType::NATIVE_INT;
+        if (H5Tequal(native_id, H5T_NATIVE_LONG))
+            return H5::PredType::NATIVE_LONG;
+        if (H5Tequal(native_id, H5T_NATIVE_LLONG))
+            return H5::PredType::NATIVE_LLONG;
+        if (H5Tequal(native_id, H5T_NATIVE_UCHAR))
+            return H5::PredType::NATIVE_UCHAR;
+        if (H5Tequal(native_id, H5T_NATIVE_USHORT))
+            return H5::PredType::NATIVE_USHORT;
+        if (H5Tequal(native_id, H5T_NATIVE_UINT))
+            return H5::PredType::NATIVE_UINT;
+        if (H5Tequal(native_id, H5T_NATIVE_ULONG))
+            return H5::PredType::NATIVE_ULONG;
+        if (H5Tequal(native_id, H5T_NATIVE_ULLONG))
+            return H5::PredType::NATIVE_ULLONG;
+        if (H5Tequal(native_id, H5T_NATIVE_FLOAT))
+            return H5::PredType::NATIVE_FLOAT;
+        if (H5Tequal(native_id, H5T_NATIVE_DOUBLE))
+            return H5::PredType::NATIVE_DOUBLE;
+        if (H5Tequal(native_id, H5T_NATIVE_LDOUBLE))
+            return H5::PredType::NATIVE_LDOUBLE;
+        if (H5Tequal(native_id, H5T_NATIVE_B8))
+            return H5::PredType::NATIVE_B8;
+        if (H5Tequal(native_id, H5T_NATIVE_B16))
+            return H5::PredType::NATIVE_B16;
+        if (H5Tequal(native_id, H5T_NATIVE_B32))
+            return H5::PredType::NATIVE_B32;
+        if (H5Tequal(native_id, H5T_NATIVE_B64))
+            return H5::PredType::NATIVE_B64;
         throw std::invalid_argument("Not an atomic type!");
         return H5::PredType::NATIVE_OPAQUE;
     }
@@ -192,7 +211,8 @@ namespace H5Composites {
         hid_t native_id = H5Tget_native_type(dtype.getId(), H5T_DIR_ASCEND);
         // Create a very basic struct definition whose only purpose is to close this ID at the
         // end of the function
-        struct close_id {
+        struct close_id
+        {
             ~close_id() { H5Tclose(id); }
             hid_t id;
         } closer = {native_id};
@@ -213,8 +233,7 @@ namespace H5Composites {
             dims.begin(),
             dims.end(),
             1,
-            std::multiplies<hsize_t>()
-        );
+            std::multiplies<hsize_t>());
     }
 
     AtomDTypeComparison operator&&(AtomDTypeComparison lhs, AtomDTypeComparison rhs)
@@ -265,22 +284,22 @@ namespace H5Composites {
         {
             switch (lhs.getSign())
             {
-                case H5T_SGN_NONE:
-                    // LHS is unsigned. If the RHS has a higher precision (allowing for the sign
-                    // bit) then it is more precise, otherwise they're disjoint
-                    if (rhs.getPrecision() > lhs.getPrecision())
-                        return AtomDTypeComparison::RHSMorePrecise;
-                    else
-                        return AtomDTypeComparison::DisjointDomains;
-                case H5T_SGN_2:
-                    // Opposite of above
-                    if (lhs.getPrecision() > rhs.getPrecision())
-                        return AtomDTypeComparison::LHSMorePrecise;
-                    else
-                        return AtomDTypeComparison::DisjointDomains;
-                default:
-                    throw std::invalid_argument("Integer type has invalid sign type");
+            case H5T_SGN_NONE:
+                // LHS is unsigned. If the RHS has a higher precision (allowing for the sign
+                // bit) then it is more precise, otherwise they're disjoint
+                if (rhs.getPrecision() > lhs.getPrecision())
+                    return AtomDTypeComparison::RHSMorePrecise;
+                else
                     return AtomDTypeComparison::DisjointDomains;
+            case H5T_SGN_2:
+                // Opposite of above
+                if (lhs.getPrecision() > rhs.getPrecision())
+                    return AtomDTypeComparison::LHSMorePrecise;
+                else
+                    return AtomDTypeComparison::DisjointDomains;
+            default:
+                throw std::invalid_argument("Integer type has invalid sign type");
+                return AtomDTypeComparison::DisjointDomains;
             }
         }
     }
@@ -295,7 +314,7 @@ namespace H5Composites {
         std::size_t rhsMantissaSize;
         lhs.getFields(dump, dump, lhsExponentSize, dump, lhsMantissaSize);
         rhs.getFields(dump, dump, rhsExponentSize, dump, rhsMantissaSize);
-        
+
         return comparePrecision(lhsExponentSize, rhsExponentSize) && comparePrecision(lhsMantissaSize, rhsMantissaSize);
     }
 
@@ -316,9 +335,10 @@ namespace H5Composites {
             return AtomDTypeComparison::DisjointDomains;
     }
 
-    AtomDTypeComparison compareDTypes(const H5::FloatType &lhs, const H5::IntType &rhs)    {
+    AtomDTypeComparison compareDTypes(const H5::FloatType &lhs, const H5::IntType &rhs)
+    {
         AtomDTypeComparison swapped = compareDTypes(rhs, lhs);
-        switch(swapped)
+        switch (swapped)
         {
         case AtomDTypeComparison::LHSMorePrecise:
             return AtomDTypeComparison::RHSMorePrecise;
@@ -333,7 +353,7 @@ namespace H5Composites {
     {
         if (lhs == rhs)
             return AtomDTypeComparison::SamePrecision;
-        switch(lhs.getClass())
+        switch (lhs.getClass())
         {
         case H5T_INTEGER:
         {
@@ -381,6 +401,14 @@ namespace H5Composites {
         }
     }
 
+    std::map<std::string, long> getEnumValues(const H5::EnumType &enum)
+    {
+        std::map<std::string, int> values;
+        for (std::size_t idx = 0; idx < enum.getNmembers(); ++idx)
+        {
+        }
+    }
+
     H5::PredType getCommonNativeDType(std::vector<H5::DataType> &dtypes)
     {
         AtomTypeInfo info;
@@ -392,8 +420,7 @@ namespace H5Composites {
         if (!(common >= info))
             throw H5::DataTypeIException(
                 "H5Composites::getCommonNativeDType",
-                "Found native data type is not large enough!"
-            );
+                "Found native data type is not large enough!");
         return common;
     }
 
@@ -417,8 +444,7 @@ namespace H5Composites {
             if (!enforceEqual(dims, getArrayDims(dtype)))
                 throw H5::DataTypeIException(
                     "H5Composites::getCommonArrayDType",
-                    "Array dimensions do not match!"
-                );
+                    "Array dimensions do not match!");
         return H5::ArrayType(commonSuper, dims->size(), dims->data());
     }
 
@@ -451,7 +477,7 @@ namespace H5Composites {
             if (*compoundEnd)
                 break;
             H5::DataType common = getCommonDType(elemDTypes);
-            subDTypes.emplace_back(common, name);
+            subDTypes.emplace_back(common, *name);
             totalSize += common.getSize();
         }
         // Now build the type
@@ -463,5 +489,17 @@ namespace H5Composites {
             offset += elemDType.first.getSize();
         }
         return common;
+    }
+
+    H5::VarLenType getCommonVarLenDType(const std::vector<H5::VarLenType> &dtypes)
+    {
+        H5::DataType commonSuper = getCommonDType(getSuperTypes(dtypes.begin(), dtypes.end()));
+        return H5::VarLenType(commonSuper);
+    }
+
+    H5::EnumType getCommonEnumDType(const std::vector<H5::EnumType> &dtype)
+    {
+        H5::PredType commonSuper = getCommonNativeDType(getSuperTypes(dtypes.begin(), dtypes.end()));
+        H5::EnumType common(H5::IntType(commonSuper.getId()));
     }
 }
