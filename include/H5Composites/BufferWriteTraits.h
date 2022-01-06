@@ -15,11 +15,12 @@
 #include <type_traits>
 #include "H5Composites/IBufferWriter.h"
 #include "H5Composites/DTypes.h"
-#include "H5Composites/DTypeConversion.h"
+#include "H5Composites/DTypeConverter.h"
 #include "H5Composites/H5Buffer.h"
 #include <cstring>
 
-namespace H5Composites {
+namespace H5Composites
+{
     /**
      * @brief Default implementation for the buffer write traits
      * 
@@ -31,21 +32,18 @@ namespace H5Composites {
         using write_t = UnderlyingType_t<T>;
         static_assert(
             std::is_base_of_v<IBufferWriter, write_t> || std::is_trivial_v<write_t>,
-            "Default implementation only valid for IBufferWriter instances or standard layout classes"
-        );
+            "Default implementation only valid for IBufferWriter instances or standard layout classes");
 
-        template <typename U=write_t>
+        template <typename U = write_t>
         static constexpr std::enable_if_t<std::is_base_of_v<IBufferWriter, U>, void> write(
-            const U& u, void *buffer, const H5::DataType &targetDType
-        )
+            const U &u, void *buffer, const H5::DataType &targetDType)
         {
             u.writeBufferWithType(buffer, targetDType);
         }
 
-        template <typename U=write_t>
+        template <typename U = write_t>
         static constexpr std::enable_if_t<!std::is_base_of_v<IBufferWriter, U>, void> write(
-            const U &u, void *buffer, const H5::DataType &targetDType
-        )
+            const U &u, void *buffer, const H5::DataType &targetDType)
         {
             const H5::DataType &sourceDType = getH5DType<T>(u);
             if (sourceDType == targetDType)

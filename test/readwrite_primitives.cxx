@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2021
  * 
  */
-#define BOOST_TEST_MODULE readwrite_rpimitives
+#define BOOST_TEST_MODULE readwrite_primitives
 
 #include <boost/test/included/unit_test.hpp>
 #include <boost/io/ios_state.hpp>
@@ -30,15 +30,15 @@ std::ostream &operator<<(std::ostream &os, std::byte b)
 template <std::size_t N>
 std::ostream &operator<<(std::ostream &os, const std::array<std::byte, N> &byteArr)
 {
-    for (std::size_t i = 0; i < N-1; ++i)
+    for (std::size_t i = 0; i < N - 1; ++i)
         os << byteArr[i] << " ";
-    return os << byteArr[N-1];
+    return os << byteArr[N - 1];
 }
 
 template <std::size_t N>
 std::array<std::byte, N> toBytes(const std::array<uint8_t, N> &bytes)
 {
-    return reinterpret_cast<const std::array<std::byte, N>&>(bytes);
+    return reinterpret_cast<const std::array<std::byte, N> &>(bytes);
 }
 
 struct RWTestBase
@@ -51,9 +51,8 @@ template <typename T>
 struct RWTest : public RWTestBase
 {
 public:
-    RWTest(T val, H5::PredType type, const std::array<uint8_t, sizeof(T)> &bytes) :
-        m_val(val), m_type(type), m_bytes(toBytes(bytes)) {}
-    
+    RWTest(T val, H5::PredType type, const std::array<uint8_t, sizeof(T)> &bytes) : m_val(val), m_type(type), m_bytes(toBytes(bytes)) {}
+
     void write_test() const override
     {
         std::array<std::byte, sizeof(T)> buffer;
@@ -66,6 +65,7 @@ public:
         T readVal = H5Composites::BufferReadTraits<T>::read(&m_bytes, m_type);
         BOOST_TEST(readVal == m_val);
     }
+
 private:
     T m_val;
     H5::PredType m_type;
@@ -117,7 +117,7 @@ std::vector<std::unique_ptr<RWTestBase>> makeTests()
     return v;
 }
 
-/// Test writing 
+/// Test writing
 BOOST_AUTO_TEST_CASE(write_primitive)
 {
     for (const std::unique_ptr<RWTestBase> &test : makeTests())
@@ -127,13 +127,12 @@ BOOST_AUTO_TEST_CASE(write_primitive)
 /// Test reading
 BOOST_AUTO_TEST_CASE(read_primitive)
 {
-    for (const std::unique_ptr<RWTestBase> &test :makeTests())
+    for (const std::unique_ptr<RWTestBase> &test : makeTests())
         test->read_test();
 }
 
-
 template <typename T>
-T roundTrip(const T& val)
+T roundTrip(const T &val)
 {
     H5::DataType dtype = H5Composites::getH5DType<T>(val);
     H5Composites::SmartBuffer buffer(dtype.getSize());

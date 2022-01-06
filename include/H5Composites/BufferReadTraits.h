@@ -14,10 +14,12 @@
 
 #include <type_traits>
 #include "H5Composites/DTypes.h"
-#include "H5Composites/DTypeConversion.h"
+#include "H5Composites/DTypeConverter.h"
 #include "H5Composites/H5Buffer.h"
+#include <cstring>
 
-namespace H5Composites {
+namespace H5Composites
+{
     /// Whether or not a type is constructible from a buffer and a data type
     template <typename T>
     static inline constexpr bool is_buffer_readable_v = std::is_constructible_v<T, const void *, const H5::DataType &>;
@@ -36,29 +38,26 @@ namespace H5Composites {
         using read_t = UnderlyingType_t<T>;
         static_assert(
             is_buffer_readable_v<read_t> || std::is_trivial_v<read_t>,
-            "Default implementation only valid for trivial classes or IBufferReader instances"
-        );
+            "Default implementation only valid for trivial classes or IBufferReader instances");
 
-        template <typename U=read_t>
+        template <typename U = read_t>
         static std::enable_if_t<is_buffer_readable_v<read_t>, U> read(
-            const void *buffer, const H5::DataType &dtype
-        )
+            const void *buffer, const H5::DataType &dtype)
         {
             return U(buffer, dtype);
         }
 
-        template <typename U=read_t>
+        template <typename U = read_t>
         static std::enable_if_t<!is_buffer_readable_v<read_t>, U> read(
-            const void *buffer, const H5::DataType &dtype
-        )
+            const void *buffer, const H5::DataType &dtype)
         {
             const H5::DataType &targetDType = getH5DType<U>();
             if (dtype == targetDType)
-                return *reinterpret_cast<const U*>(buffer);
+                return *reinterpret_cast<const U *>(buffer);
             else
-                return *reinterpret_cast<const U*>(convert(buffer, dtype, targetDType).get());
+                return *reinterpret_cast<const U *>(convert(buffer, dtype, targetDType).get());
         }
-    }; //> end struct buffer_read_traits
+    }; //> end struct BufferReadTraits<T>
 
     template <typename T>
     UnderlyingType_t<T> fromBuffer(const H5Buffer &buffer)

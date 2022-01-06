@@ -15,7 +15,7 @@
 #include "H5Composites/DTypes.h"
 #include "H5Composites/BufferReadTraits.h"
 #include "H5Composites/BufferWriteTraits.h"
-#include "H5Composites/DTypeConversion.h"
+#include "H5Composites/DTypeConverter.h"
 #include "H5Composites/CompDTypeUtils.h"
 #include "H5Composites/DTypeUtils.h"
 #include <vector>
@@ -23,16 +23,20 @@
 
 namespace H5Composites
 {
-    template <typename T, typename Allocator=std::allocator<UnderlyingType_t<T>>>
-    struct FLVector {};
+    template <typename T, typename Allocator = std::allocator<UnderlyingType_t<T>>>
+    struct FLVector
+    {
+    };
 
     template <typename T, typename Allocator>
-    struct UnderlyingType<FLVector<T, Allocator>> {
+    struct UnderlyingType<FLVector<T, Allocator>>
+    {
         using type = std::vector<UnderlyingType_t<T>, Allocator>;
     };
 
     template <typename T, typename Allocator>
-    struct H5DType<FLVector<T, Allocator>> {
+    struct H5DType<FLVector<T, Allocator>>
+    {
         static H5::DataType getType(const std::vector<UnderlyingType_t<T>, Allocator> &value)
         {
             if constexpr (has_static_h5dtype_v<T>)
@@ -48,7 +52,8 @@ namespace H5Composites
     };
 
     template <typename T, typename Allocator>
-    struct BufferReadTraits<FLVector<T, Allocator>> {
+    struct BufferReadTraits<FLVector<T, Allocator>>
+    {
         static std::vector<UnderlyingType_t<T>, Allocator> read(const void *buffer, const H5::DataType &dtype)
         {
             if constexpr (has_static_h5dtype_v<T> && std::is_trivial_v<T>)
@@ -79,7 +84,8 @@ namespace H5Composites
     };
 
     template <typename T, typename Allocator>
-    struct BufferWriteTraits<FLVector<T, Allocator>> {
+    struct BufferWriteTraits<FLVector<T, Allocator>>
+    {
         static void write(const std::vector<UnderlyingType_t<T>> &value, void *buffer, const H5::DataType &dtype)
         {
             H5::DataType sourceDType = getH5DType<FLVector<T, Allocator>>(value);
@@ -90,7 +96,8 @@ namespace H5Composites
                 {
                     std::memcpy(buffer, value.data(), sourceDType.getSize());
                 }
-                else {
+                else
+                {
                     // have to convert the vector's storage
                     H5Buffer converted = convert(value.data(), sourceDType, dtype);
                     // Now copy this
@@ -104,8 +111,7 @@ namespace H5Composites
                     value.begin(),
                     value.end(),
                     buffer,
-                    dtype.getId()
-                );
+                    dtype.getId());
             }
         }
     };

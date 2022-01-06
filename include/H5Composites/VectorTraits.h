@@ -12,17 +12,17 @@
 #ifndef H5COMPOSITES_VECTORTRAITS_H
 #define H5COMPOSITES_VECTORTRAITS_H
 
-
 #include "H5Composites/DTypes.h"
 #include "H5Composites/BufferReadTraits.h"
 #include "H5Composites/BufferWriteTraits.h"
 #include "H5Composites/SmartBuffer.h"
-#include "H5Composites/DTypeConversion.h"
+#include "H5Composites/DTypeConverter.h"
 #include "H5Cpp.h"
 #include <vector>
 #include <cstring>
 
-namespace H5Composites {
+namespace H5Composites
+{
 
     template <typename T, typename Allocator>
     struct UnderlyingType<std::vector<T, Allocator>>
@@ -31,12 +31,12 @@ namespace H5Composites {
     };
 
     template <typename T, typename Allocator>
-    struct H5DType<std::vector<T, Allocator>> {
-        
+    struct H5DType<std::vector<T, Allocator>>
+    {
+
         static_assert(
             has_static_h5dtype_v<T>,
-            "Variable length data types are only valid for static datatypes"
-        );
+            "Variable length data types are only valid for static datatypes");
 
         static H5::DataType getType()
         {
@@ -60,7 +60,7 @@ namespace H5Composites {
             const hvl_t &vldata = *reinterpret_cast<const hvl_t *>(buffer);
             if constexpr (std::is_trivial_v<UnderlyingType_t<T>>)
             {
-                const UnderlyingType_t<T>* start = reinterpret_cast<const UnderlyingType_t<T>*>(vldata.p);
+                const UnderlyingType_t<T> *start = reinterpret_cast<const UnderlyingType_t<T> *>(vldata.p);
                 return std::vector<T, Allocator>(start, start + vldata.len);
             }
             else
@@ -70,9 +70,8 @@ namespace H5Composites {
                 const std::byte *start = reinterpret_cast<const std::byte *>(vldata.p);
                 H5::DataType super = targetDType.getSuper();
                 for (std::size_t idx = 0; idx < vldata.len; ++idx)
-                    out.push_back(BufferReadTraits<T>::read(start + idx*super.getSize(), super));
+                    out.push_back(BufferReadTraits<T>::read(start + idx * super.getSize(), super));
                 return out;
-
             }
         }
     }; //> end struct BufferReadTraits<std::vector<T, Allocator>>
@@ -94,20 +93,22 @@ namespace H5Composites {
                 /// contiguous and we can just copy
                 std::memcpy(dataBuffer.get(), value.data(), dataSize);
             }
-            else {
+            else
+            {
                 /// Otherwise we have to go member by member and write in the data buffer
                 std::byte *byteBuffer = reinterpret_cast<std::byte *>(dataBuffer.get());
                 for (std::size_t idx = 0; idx < value.size(); ++idx)
                     BufferWriteTraits<T>::write(value.at(idx), byteBuffer + idx * superType.getSize(), superType);
-                //std::cout << "byte buffer is " << bytes << std::endl; 
             }
             hvl_t vldata{value.size(), dataBuffer.get()};
-            if (sourceDType == dtype) {
+            if (sourceDType == dtype)
+            {
                 std::memcpy(buffer, &vldata, sizeof(vldata));
                 // Now release the vector data - the owner of buffer is responsible for it
                 dataBuffer.release();
             }
-            else {
+            else
+            {
                 // Let H5 convert the vector data
                 H5Buffer converted = convert(&vldata, sourceDType, dtype);
                 std::memcpy(buffer, converted.get(), dtype.getSize());

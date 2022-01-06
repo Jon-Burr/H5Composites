@@ -11,10 +11,11 @@
 #include "H5Composites/IBufferWriter.h"
 #include "H5Composites/DTypeUtils.h"
 #include "H5Composites/SmartBuffer.h"
-#include "H5Composites/DTypeConversion.h"
+#include "H5Composites/DTypeConverter.h"
 #include <cstring>
 
-namespace H5Composites {
+namespace H5Composites
+{
     IBufferWriter::~IBufferWriter() {}
 
     void IBufferWriter::writerBufferWithType(

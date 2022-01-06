@@ -15,25 +15,82 @@
 #include "H5Cpp.h"
 #include <vector>
 #include <iterator>
+#include <map>
 
 namespace H5Composites
 {
+    /**
+     * @brief Get a vector containing the predefined data types that correspond to unique C++ types
+     * 
+     * The types are returned in order of ascending storage size. Where there is ambiguity types
+     * are returned in the following order:
+     * - Unsigned integer
+     * - Signed integer
+     * - Float
+     * - Bitfield
+     * 
+     * Only PredTypes with the NATIVE prefix are returned and only those which refer to unique C++
+     * types - these are basically the numeric types and the bitfield types
+     */
+    const std::vector<H5::PredType> &nativePredefinedDTypes();
 
     /**
-     * @brief Returns whether or not the data type is atomic
+     * @brief Check if a type is one of the selected set of predefined types
+     */
+    bool isNativePredefinedDType(const H5::DataType &dtype);
+
+    /**
+     * @brief Get a vector containing all the native predefined numeric data types
+     * 
+     * The types are returned in order of ascending storage size. Where there is ambiguity types
+     * are returned in the following order:
+     * - Unsigned integer
+     * - Signed integer
+     * - Float
+     * 
+     * Note that this does not include the boolean type. 
+     */
+    const std::vector<H5::PredType> &nativeNumericDTypes();
+
+    /**
+     * @brief Returns whether or not the data type is numeric
      * 
      * @param dtype The data type
+     * 
+     * Returns False for boolean
      */
-    bool isAtomicDType(const H5::DataType &dtype);
+    bool isNumericDType(const H5::DataType &dtype);
 
     /**
-     * @brief Get the native atomic data type corresponding to this data type
+     * @brief Get the native numeric data type corresponding to this data type
      * 
      * @param dtype The data type
      * @return The corresponding data type
-     * @exception H5::DataTypeIException The data type is not an atomic datatype
+     * @exception H5::DataTypeIException The data type is not a numeric datatype
      */
-    H5::PredType getNativeAtomicDType(const H5::DataType &dtype);
+    H5::PredType getNativeNumericDType(const H5::DataType &dtype);
+
+    /**
+     * @brief Get the native bitfield data type corresponding to this data type
+     * 
+     * @param dtype The data type
+     * @return The corresponding native data type
+     * @exception H5::DataTypeIException The data type is not a bitfield data type
+     * 
+     * The correct native data type is chosen solely by the precision of the provided type
+     */
+    H5::PredType getNativeBitfieldDType(const H5::DataType &dtype);
+
+    /**
+     * @brief Get the native predefined data type corresponding to this data type
+     * 
+     * @param dtype The data type
+     * @return The corresponding native data type
+     * @exception H5::DataTypeIException The data type has no corresponding native predefined type
+     * 
+     * Bitfields and numeric types go through the corresponding functions so may be conversions
+     */
+    H5::PredType getNativePredefinedDType(const H5::DataType &dtype);
 
     /**
      * @brief Get the native version of a datatype
@@ -57,7 +114,7 @@ namespace H5Composites
     std::size_t getNArrayElements(const H5::ArrayType &dtype);
 
     /// Describes the safety of conversions between data types
-    enum class AtomDTypeComparison
+    enum class DTypeComparison
     {
         SamePrecision,  ///< The two data types hold the same information
         LHSMorePrecise, ///< The domain of the LHS data-type contains the domain of the RHS data-type
@@ -65,46 +122,54 @@ namespace H5Composites
         DisjointDomains ///< The domains are disjoint (i.e. no safe conversion exists)
     };
     /// Combine two data-type comparisons
-    AtomDTypeComparison operator&&(AtomDTypeComparison lhs, AtomDTypeComparison rhs);
+    DTypeComparison operator&&(DTypeComparison lhs, DTypeComparison rhs);
 
     /// Compare the precision of two data-types
-    AtomDTypeComparison comparePrecision(std::size_t lhs, std::size_t rhs);
+    DTypeComparison comparePrecision(std::size_t lhs, std::size_t rhs);
+
+    /**
+     * @brief Compare the two provided data types
+     * 
+     * @exception H5::DataTypeIException either type is not a numeric dtype
+     * @return value describing the comparison 
+     */
+    DTypeComparison compareNumericDTypes(const H5::DataType &lhs, const H5::DataType &rhs);
     /**
      * @brief Compare the two provided data types
      * 
      * @return enum value describing the conversion
      */
-    AtomDTypeComparison compareDTypes(const H5::AtomType &lhs, const H5::AtomType &rhs);
+    DTypeComparison compareDTypes(const H5::AtomType &lhs, const H5::AtomType &rhs);
 
     /**
      * @brief Compare the two provided data types
      * 
      * @return enum value describing the conversion
      */
-    AtomDTypeComparison compareDTypes(const H5::IntType &lhs, const H5::IntType &rhs);
+    DTypeComparison compareDTypes(const H5::IntType &lhs, const H5::IntType &rhs);
 
     /**
      * @brief Compare the two provided data types
      * 
      * @return enum value describing the conversion
      */
-    AtomDTypeComparison compareDTypes(const H5::FloatType &lhs, const H5::FloatType &rhs);
+    DTypeComparison compareDTypes(const H5::FloatType &lhs, const H5::FloatType &rhs);
 
     /**
      * @brief Compare the two provided data types
      * 
      * @return enum value describing the conversion
      */
-    AtomDTypeComparison compareDTypes(const H5::IntType &lhs, const H5::FloatType &rhs);
+    DTypeComparison compareDTypes(const H5::IntType &lhs, const H5::FloatType &rhs);
 
     /**
      * @brief Compare the two provided data types
      * 
      * @return enum value describing the conversion
      */
-    AtomDTypeComparison compareDTypes(const H5::FloatType &lhs, const H5::IntType &rhs);
+    DTypeComparison compareDTypes(const H5::FloatType &lhs, const H5::IntType &rhs);
 
-    std::map<std::string, long> getEnumValues(const H5::EnumType &enum, std::size_t nameSize = 100);
+    std::map<std::string, long> getEnumValues(const H5::EnumType &enumType, std::size_t nameSize = 100);
 
     /**
      * @brief Get the smallest common native data type to all the provided data types
@@ -118,8 +183,19 @@ namespace H5Composites
      * 
      * String data types should not be passed to this function 
      */
-    H5::PredType getCommonNativeDType(
+    H5::PredType getCommonNumericDType(
         const std::vector<H5::DataType> &dtypes);
+
+    /**
+     * @brief Get the smallest common native bitfield data-type for all the provided bitfield data types
+     * 
+     * @param dtypes The input data types
+     * @return The smallest common data types
+     * 
+     * A data type is common if it can hold all the values that the input data types could have
+     * without any loss of precision.
+     */
+    H5::PredType getCommonBitfieldDType(const std::vector<H5::IntType> &dtypes);
 
     /**
      * @brief Get the smallest common string data type to all the provided data types

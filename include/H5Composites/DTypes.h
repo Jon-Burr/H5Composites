@@ -34,9 +34,9 @@
 #include <type_traits>
 #include "boost/tti/has_member_function.hpp"
 #include "boost/tti/has_static_member_function.hpp"
-#include <bitset>
 
-namespace H5Composites {
+namespace H5Composites
+{
     // Create the boost tti metafunctions
     // These create the following metafunctions:
     // - has_static_member_function_h5DType
@@ -68,11 +68,10 @@ namespace H5Composites {
         // Assert the assumptions made by this class
         static_assert(
             has_static_member_function_h5DType<T, H5::DataType>::value ^
-            has_member_function_h5DType<const UnderlyingType_t<T>, H5::DataType>::value,
+                has_member_function_h5DType<const UnderlyingType_t<T>, H5::DataType>::value,
             "Default implementation is invalid: "
             "Either the type must have a static member function called h5DType or "
-            "the underlying type must have a const member function called h5DType"
-            );
+            "the underlying type must have a const member function called h5DType");
 
         /**
          * @brief Get the H5 data type for this class
@@ -81,10 +80,11 @@ namespace H5Composites {
          * 
          * Only defined if the class has a static h5DType function returning a H5::DataType
          */
-        template <typename U=T>
+        template <typename U = T>
         static std::enable_if_t<
             has_static_member_function_h5DType<U, H5::DataType()>::value,
-            H5::DataType> getType()
+            H5::DataType>
+        getType()
         {
             return U::h5DType();
         }
@@ -96,10 +96,11 @@ namespace H5Composites {
          * 
          * Only defined if the underlying class has a non-static h5DType function returning a H5::DataType
          */
-        template <typename U=UnderlyingType_t<T>>
+        template <typename U = UnderlyingType_t<T>>
         static std::enable_if_t<
             has_member_function_h5DType<const U, H5::DataType()>::value,
-            H5::DataType> getType(const U& u)
+            H5::DataType>
+        getType(const U &u)
         {
             return u.h5Dtype();
         }
@@ -118,23 +119,23 @@ namespace H5Composites {
     }
 
     template <typename T>
-    std::enable_if_t<has_static_h5dtype_v<T>, H5::DataType> getH5DType(const UnderlyingType_t<T>&)
+    std::enable_if_t<has_static_h5dtype_v<T>, H5::DataType> getH5DType(const UnderlyingType_t<T> &)
     {
         return getH5DType<T>();
     }
 
     template <typename T>
-    std::enable_if_t<
-        !has_static_h5dtype_v<T> &&
-        has_static_member_function_getType<H5DType<T>, H5::DataType(const UnderlyingType_t<T>&)>::value,
-        H5::DataType> getH5DType(const UnderlyingType_t<T> &t)
+    std::enable_if_t<!has_static_h5dtype_v<T>, H5::DataType> getH5DType(const UnderlyingType_t<T> &t)
     {
         return H5DType<T>::getType(t);
     }
-    // Specialisations for core types
-    #define H5COMPOSITES_DECLARE_STATIC_H5DTYPE(type)           \
-        template <>                                             \
-        struct H5DType<type> { static H5::DataType getType(); }
+// Specialisations for core types
+#define H5COMPOSITES_DECLARE_STATIC_H5DTYPE(type) \
+    template <>                                   \
+    struct H5DType<type>                          \
+    {                                             \
+        static H5::DataType getType();            \
+    }
 
     H5COMPOSITES_DECLARE_STATIC_H5DTYPE(int);
     H5COMPOSITES_DECLARE_STATIC_H5DTYPE(unsigned int);
@@ -151,27 +152,9 @@ namespace H5Composites {
     H5COMPOSITES_DECLARE_STATIC_H5DTYPE(double);
     H5COMPOSITES_DECLARE_STATIC_H5DTYPE(bool);
 
-    #undef H5COMPOSITES_DECLARE_STATIC_H5DTYPE
-
-    /// Specialisations for bitsets
-    template <std::size_t N>
-    struct H5DType<std::bitset<N>>{
-        static H5::DataType getType()
-        {
-            static_assert(N <= 64, "bitsets can only handle sizes up to 64");
-            if constexpr (N <= 8)
-                return H5::PredType::NATIVE_B8;
-            else if constexpr (N <= 16)
-                return H5::PredType::NATIVE_B16;
-            else if constexpr (N <= 32)
-                return H5::PredType::NATIVE_B32;
-            else
-                return H5::PredType::NATIVE_B64;
-        }
-    };
+#undef H5COMPOSITES_DECLARE_STATIC_H5DTYPE
 
 
 } //> end namespace H5Composites
-
 
 #endif //> !H5COMPOSITES_DTYPES_H

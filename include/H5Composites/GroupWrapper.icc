@@ -1,0 +1,61 @@
+#include "H5Composites/BufferReadTraits.h"
+#include "H5Composites/BufferWriteTraits.h"
+#include "H5Composites/DTypeConverter.h"
+
+namespace H5Composites
+{
+    template <typename T>
+    UnderlyingType_t<T> GroupWrapper::readScalar(const std::string &name) const
+    {
+        H5::DataSet ds = m_group.openDataSet(name);
+        H5Buffer buffer(ds.getDataType());
+        return ds.read(buffer.get(), buffer.dtype());
+    }
+
+    template <typename T>
+    H5::DataSet GroupWrapper::writeScalar(const UnderlyingType_t<T> &obj, const std::string &name)
+    {
+        return writeScalar<T>(obj, name, TypeIDTraits<T>::typeID());
+    }
+
+    template <typename T>
+    H5::DataSet GroupWrapper::writeScalar(
+        const UnderlyingType_t<T> &obj,
+        const std::string &name,
+        const std::string &typeName)
+    {
+        const H5::EnumType &enumType = TypeRegister::instance().enumType();
+        H5Buffer buffer(enumType);
+        enumType.valueOf(typeName, buffer.get());
+        return writeScalar<T>(obj, name, buffer);
+    }
+
+    template <typename T>
+    H5::DataSet GroupWrapper::writeScalar(
+        const UnderlyingType_t<T> &obj,
+        const std::string &name,
+        TypeRegister::id_t typeID)
+    {
+        const H5::EnumType &enumType = TypeRegister::instance().enumType();
+        H5Buffer buffer(enumType);
+        BufferWriteTraits<TypeRegister::id_t>::write(typeID, buffer.get(), enumType.getSuper());
+        return writeScalar<T>(obj, name, buffer);
+    }
+
+    template <typename T>
+    H5::DataSet GroupWrapper::writeScalar(
+        const UnderlyingType_t<T> &obj,
+        const std::string &name,
+        const H5Buffer &fileTypeID)
+    {
+        H5::DataSet ds = m_group.createDataSet(name, getH5DType<T>(obj), H5S_SCALAR);
+        H5Buffer buffer = toBuffer<T>(obj);
+        ds.write(buffer.get(), buffer.dtype());
+        if (fileTypeID)
+        {
+            H5::Attribute attr = ds.createAttribute("typeID", TypeRegister::instance().enumType(), H5S_SCALAR);
+            attr.write(fileTypeID.dtype(), fileTypeID.get());
+        }
+        return ds;
+    }
+}

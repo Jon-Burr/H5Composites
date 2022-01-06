@@ -17,7 +17,7 @@
 #include "H5Composites/BufferReadTraits.h"
 #include "H5Composites/BufferWriteTraits.h"
 #include "H5Composites/CompDTypeUtils.h"
-#include "H5Composites/DTypeConversion.h"
+#include "H5Composites/DTypeConverter.h"
 #include <array>
 #include <cstring>
 #include "H5Cpp.h"

@@ -3,6 +3,7 @@
 #include <boost/algorithm/string/trim.hpp> 
 
 #include "H5Cpp.h"
+#include "H5Composites/FileMerger.h"
 
 #include <vector>
 #include <string>
@@ -72,8 +73,7 @@ int main(int argc, char *argv[])
     bool overwrite = false;
     std::string inCSV;
     std::vector<std::string> inputFiles;
-    std::size_t bufferSizeMB = 100;
-    std::size_t bufferSizeRows = -1;
+    std::size_t bufferSizeMB = 10;
 
 
     po::options_description desc("Allowed options");
@@ -82,8 +82,6 @@ int main(int argc, char *argv[])
     ("input,i", po::value(&inCSV), "A comma separated list of input files")
     ("bufferSizeMB,B", po::value(&bufferSizeMB),
      "The size of the buffer to use in MB. Cannot be set with 'bufferSizeRows'")
-    ("bufferSizeRows,b", po::value(&bufferSizeRows),
-     "The size of the buffer to use in rows. Cannot be set with 'bufferSizeMB'")
     ("overwrite,w", po::bool_switch(&overwrite),
      "Overwrite the output file if it already exists. Cannot be set with 'in-place'")
     ("help,h", "Print this message and exit.");
@@ -128,27 +126,9 @@ int main(int argc, char *argv[])
         std::cerr << "You cannot specify both bufferSizeMB and bufferSizeRows!" << std::endl;
         return 1;
     }
-    std::size_t bufferSize;
-    bool bufferInRows;
-    if (vm.count("bufferSizeRows") ) {
-        bufferSize = bufferSizeRows;
-        bufferInRows = true;
-    }
-    else {
-        // Default used if neither was set or if bufferSizeMB is set
-        static constexpr std::size_t MB = 1024*1024;
-        if (std::size_t(-1) / bufferSizeMB < MB)
-        throw std::overflow_error(
-            "Requested buffer size would overflow the register!");
-        bufferSize = bufferSizeMB * MB;
-        bufferInRows = false;
-    }
-    // Make the output file
-    H5::H5File fOut(outputFile, overwrite ? H5F_ACC_TRUNC : H5F_ACC_EXCL);
-    // Open all the input files
-    std::vector<H5::Group> inputs;
-    inputs.reserve(inputFiles.size());
-    for (const std::string &inName : inputFiles)
-        inputs.push_back(H5::H5File(inName, H5F_ACC_RDONLY));
-    
+    std::size_t bufferSize = bufferSizeMB * 1024*1024;
+    // Create the merger
+    H5Composites::FileMerger merger(outputFile, inputFiles, bufferSize);
+    // Perform the merging
+    merger.merge();
 }

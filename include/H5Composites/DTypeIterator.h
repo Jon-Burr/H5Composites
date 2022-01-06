@@ -7,57 +7,61 @@
 #include <vector>
 #include <queue>
 
-namespace H5Composites {
-    class DTypeIterator {
+namespace H5Composites
+{
+    class DTypeIterator
+    {
     public:
-        enum class ElemType {
+        enum class ElemType
+        {
+            Boolean,
             Integer,
             Float,
-            //Bitfield, don't support Bitfields yet
+            Bitfield,
             String,
+            Enum,
             Array,
+            Variable,
             Compound,
             CompoundClose,
-            Variable,
             End
         };
 
-        static ElemType getElemType(const H5::DataType& dtype);
+        static ElemType getElemType(const H5::DataType &dtype);
         static std::string to_string(ElemType elemType);
-
 
         using value_type = H5::DataType;
         using difference_type = std::ptrdiff_t;
-        using pointer_type = const value_type*;
-        using reference_type = const value_type&;
+        using pointer_type = const value_type *;
+        using reference_type = const value_type &;
         using iterator_category = std::forward_iterator_tag;
 
         DTypeIterator() : m_elemType(ElemType::End) {}
-        DTypeIterator(const H5::DataType& dtype);
+        DTypeIterator(const H5::DataType &dtype);
 
         reference_type operator*() const { return std::get<0>(m_queues.back().front()); }
         pointer_type operator->() const { return &operator*(); }
 
-        DTypeIterator& operator++();
+        DTypeIterator &operator++();
         DTypeIterator operator++(int);
 
-        friend bool operator==(const DTypeIterator& lhs, const DTypeIterator& rhs);
-        friend bool operator!=(const DTypeIterator& lhs, const DTypeIterator& rhs);
+        friend bool operator==(const DTypeIterator &lhs, const DTypeIterator &rhs);
+        friend bool operator!=(const DTypeIterator &lhs, const DTypeIterator &rhs);
 
         /// Skip this iterator to the next compound close element or the end element if not inside a compound data type
-        DTypeIterator& skipToCompoundClose();
+        DTypeIterator &skipToCompoundClose();
 
         /// The type of the current element
         ElemType elemType() const { return m_elemType; }
 
         /// The name of the current element
-        const std::string& name() const { return std::get<1>(m_queues.back().front()); }
+        const std::string &name() const { return std::get<1>(m_queues.back().front()); }
 
         /// The full list of names to reach the current one
         std::vector<std::string> nestedNames() const;
 
         /// The full name with sub names separated by substr
-        std::string fullName(const std::string& sep=".") const;
+        std::string fullName(const std::string &sep = ".") const;
 
         /// The offset of the current datatype in the entire structure
         std::size_t currentOffset() const;
@@ -68,10 +72,13 @@ namespace H5Composites {
         /// The depth of the current datatype in the entire structure
         std::size_t depth() const { return m_queues.size() - 1; }
 
-        /// Whether a corresponding atomic type should be findable
-        bool hasAtomicDType() const;
+        /// Whether a corresponding numeric type should be findable
+        bool hasNumericDType() const;
 
-        const H5::DataType& dtype() const { return **this; }
+        /// Whether a corresponding predefined type should be findable
+        bool hasPredefinedDType() const;
+
+        const H5::DataType &dtype() const { return **this; }
 
         /// Get the current data type as an integer
         H5::IntType intDType() const;
@@ -80,15 +87,33 @@ namespace H5Composites {
         H5::FloatType floatDType() const;
 
         /**
-         * @brief Get the corresponding atomic type
+         * @brief Get the corresponding numeric type
          * 
          * Note that this uses the underlying H5Tget_native_type function and is allowed to perform
          * conversions.
          */
-        H5::PredType atomicDType() const;
+        H5::PredType numericDType() const;
+
+        /**
+         * @brief Get the corresponding predefined type
+         * 
+         * Note that this uses the underlying H5Tget_native_type function and is allowed to perform
+         * conversions.
+         */
+        H5::PredType predefinedDType() const;
+
+        /**
+         * @brief Get the corresponding bitfield type
+         * 
+         * Note that this will return one of the 4 native bitset types and can perform conversions
+         */
+        H5::PredType bitfieldDType() const;
 
         /// Get the corresponding string type
         H5::StrType strDType() const;
+
+        /// Get the corresponding enum type
+        H5::EnumType enumDType() const;
 
         /// Get the corresponding array type
         H5::ArrayType arrDType() const;

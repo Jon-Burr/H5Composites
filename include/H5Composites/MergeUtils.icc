@@ -1,0 +1,151 @@
+#include "H5Composites/DTypeUtils.h"
+#include "H5Composites/DTypeDispatch.h"
+#include "H5Composites/DTypeConverter.h"
+#include "H5Composites/DTypePrinter.h"
+
+#include <set>
+
+namespace H5Composites
+{
+    template <template <typename> typename Op>
+    H5Buffer parallelMerge(const H5::PredType &dtype, const std::vector<const void *> &buffers)
+    {
+        return H5Buffer(apply<Op>(dtype, 1, buffers), dtype);
+    }
+
+    template <template <typename> typename Op>
+    H5Buffer parallelMerge(const H5::ArrayType &dtype, const std::vector<const void *> &buffers)
+    {
+        H5::PredType super = getNativeNumericDType(dtype.getSuper());
+        std::size_t n = getNArrayElements(dtype);
+        return H5Buffer(apply<Op>(super, n, buffers), dtype);
+    }
+
+    template <template <typename> typename Op>
+    H5Buffer parallelMerge(const std::vector<std::pair<H5::DataType, const void *>> &buffers)
+    {
+        std::vector<H5::DataType> dtypes;
+        dtypes.reserve(buffers.size());
+        for (const auto &p : buffers)
+            dtypes.push_back(p.first);
+        H5::DataType common = getCommonDType(dtypes);
+        std::vector<H5Buffer> owning;
+        std::vector<const void *> converted;
+        owning.reserve(buffers.size());
+        converted.reserve(buffers.size());
+        for (const auto &p : buffers)
+        {
+            if (p.first == common)
+                // No need to convert
+                converted.push_back(p.second);
+            else
+            {
+                owning.push_back(convert(p.second, p.first, common));
+                converted.push_back(owning.back().get());
+            }
+        }
+        switch (common.getClass())
+        {
+        case H5T_INTEGER:
+        case H5T_FLOAT:
+        case H5T_BITFIELD:
+            return parallelMerge<Op>(getNativeNumericDType(common), converted);
+        case H5T_ARRAY:
+            if (!isNumericDType(common.getSuper()))
+                throw std::invalid_argument("Common type " + to_string(common) + " does not have a numeric super type");
+            return parallelMerge<Op>(H5::ArrayType(common.getId()), converted);
+        default:
+            throw std::invalid_argument("parallelMerge can only handle numeric types and arrays of numeric types, not " + to_string(common));
+            return H5Buffer();
+        }
+    }
+
+    namespace detail
+    {
+        template <
+            template <typename> typename Operator,
+            template <typename> typename Identity,
+            template <typename> typename Condition>
+        H5Buffer ParallelMerger<Operator, Identity, Condition>::mergeBuffers(const std::vector<std::pair<H5::DataType, const void *>> &buffers)
+        {
+            // Get the common data type
+            std::vector<H5::DataType> dtypes;
+            dtypes.reserve(buffers.size());
+            for (const auto &p : buffers)
+                dtypes.push_back(p.first);
+            H5::DataType common = getCommonDType(dtypes);
+            // Convert all the input buffers to the correct data type
+            // If something needs to be converted something needs to own that new memory until
+            // the end of this function
+            std::vector<H5Buffer> owning;
+            std::vector<const void *> converted;
+            owning.reserve(buffers.size());
+            converted.reserve(buffers.size());
+            std::set<std::size_t> vlenSizes;
+            for (const auto &p : buffers)
+            {
+                if (p.first == common)
+                    // No need to convert
+                    converted.push_back(p.second);
+                else
+                {
+                    owning.push_back(convert(p.second, p.first, common));
+                    converted.push_back(owning.back().get());
+                }
+                if (common.getClass() == H5T_VLEN)
+                {
+                    // If it's a variable length data type we need to get the pointers to its memory and
+                    // get the number of values in each instance
+                    // Get the stored VLen data
+                    const hvl_t *vlenData = static_cast<const hvl_t *>(converted.back());
+                    vlenSizes.insert(vlenData->len);
+                    converted.back() = vlenData->p;
+                }
+            }
+            if (isNativePredefinedDType(common))
+                return H5Buffer(apply_if<Condition, Functor>(getNativePredefinedDType(common), 1, converted), common);
+            else
+            {
+                if (!isNativePredefinedDType(common.getSuper()))
+                    throw std::invalid_argument("Common type " + to_string(common) + " does not have a native predefined super type");
+                H5::PredType commonSuper = getNativePredefinedDType(common.getSuper());
+                if (common.getClass() == H5T_ARRAY)
+                {
+                    std::size_t n = getNArrayElements(common.getId());
+                    return H5Buffer(apply_if<Condition, Functor>(commonSuper, n, converted), common);
+                }
+                else if (common.getClass() == H5T_VLEN)
+                {
+                    if (vlenSizes.size() != 1)
+                        throw std::invalid_argument("Different sizes for variable length data!");
+                    std::size_t n = *vlenSizes.begin();
+                    return H5Buffer(-apply_if<Condition, Functor>(commonSuper, n, converted), common);
+                }
+                else
+                    throw std::invalid_argument("ParallelMerger can only handle predefined types and arrays/vlen-arrays of predefined types, not " + to_string(common));
+                return H5Buffer();
+            }
+        }
+
+        template <
+            template <typename> typename Operator,
+            template <typename> typename Identity,
+            template <typename> typename Condition>
+        template <typename T>
+        SmartBuffer ParallelMerger<Operator, Identity, Condition>::Functor<T>::operator()(
+            std::size_t n,
+            const std::vector<const void *> &buffers)
+        {
+            SmartBuffer outBuffer(sizeof(T) * n);
+            T *out = static_cast<T *>(outBuffer.get());
+            Operator<T> op;
+            for (const void *inBuffer : buffers)
+            {
+                const T *buffer = static_cast<const T *>(inBuffer);
+                for (std::size_t idx = 0; idx < n; ++idx)
+                    out[idx] = op(out[idx], buffer[idx]);
+            }
+            return outBuffer;
+        }
+    }
+}
