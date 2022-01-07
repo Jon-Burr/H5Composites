@@ -40,7 +40,7 @@ namespace H5Composites
         {
         }
 
-        void write(const T &obj) { Writer::write<T>(obj); }
+        void write(const UnderlyingType_t<T> &obj) { Writer::write<T>(obj); }
 
         template <typename Iterator>
         void write(Iterator begin, Iterator end)

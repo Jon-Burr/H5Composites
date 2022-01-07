@@ -12,6 +12,7 @@
 #ifndef H5COMPOSITES_WRITER_H
 #define H5COMPOSITES_WRITER_H
 
+#include "H5Composites/DTypes.h"
 #include "H5Composites/SmartBuffer.h"
 #include "H5Composites/H5Buffer.h"
 
@@ -84,7 +85,7 @@ namespace H5Composites
 
         /// Write an object to the buffer
         template <typename T>
-        void write(const T &obj);
+        void write(const UnderlyingType_t<T> &obj);
 
         /// Write a range of objects to the buffer
         template <typename Iterator>

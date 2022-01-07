@@ -4,7 +4,7 @@
 namespace H5Composites
 {
     template <typename T>
-    void Writer::write(const T &obj)
+    void Writer::write(const UnderlyingType_t<T> &obj)
     {
         // Write directly to the buffer
         BufferWriteTraits<T>::write(

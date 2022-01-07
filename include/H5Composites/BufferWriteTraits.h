@@ -67,7 +67,23 @@ namespace H5Composites
      * @return A buffer object containing the information
      */
     template <typename T>
-    H5Buffer toBuffer(const UnderlyingType_t<T> &value)
+    std::enable_if_t<!is_wrapper_type_v<T>, H5Buffer> toBuffer(const T &value)
+    {
+        H5::DataType dtype = getH5DType<T>(value);
+        H5Buffer buffer(dtype);
+        BufferWriteTraits<T>::write(value, buffer.get(), dtype);
+        return std::move(buffer);
+    }
+
+    /**
+     * @brief Write all the information from an object to a buffer
+     * 
+     * @tparam T The wrapper type
+     * @param value The value to write
+     * @return A buffer object containing the information
+     */
+    template <typename T>
+    std::enable_if_t<is_wrapper_type_v<T>, H5Buffer> toBuffer(const UnderlyingType_t<T> &value)
     {
         H5::DataType dtype = getH5DType<T>(value);
         H5Buffer buffer(dtype);

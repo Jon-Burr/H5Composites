@@ -63,6 +63,11 @@ namespace H5Composites
     using UnderlyingType_t = typename UnderlyingType<T>::type;
 
     template <typename T>
+    using is_wrapper_type = std::negation<std::is_same<T, UnderlyingType_t<T>>>;
+    template <typename T>
+    static constexpr inline bool is_wrapper_type_v = is_wrapper_type<T>::value;
+
+    template <typename T>
     struct H5DType
     {
         // Assert the assumptions made by this class
@@ -98,11 +103,11 @@ namespace H5Composites
          */
         template <typename U = UnderlyingType_t<T>>
         static std::enable_if_t<
-            has_member_function_h5DType<const U, H5::DataType()>::value,
+            has_member_function_h5DType<const U, H5::DataType>::value,
             H5::DataType>
         getType(const U &u)
         {
-            return u.h5Dtype();
+            return u.h5DType();
         }
     };
 
@@ -153,7 +158,6 @@ namespace H5Composites
     H5COMPOSITES_DECLARE_STATIC_H5DTYPE(bool);
 
 #undef H5COMPOSITES_DECLARE_STATIC_H5DTYPE
-
 
 } //> end namespace H5Composites
 
