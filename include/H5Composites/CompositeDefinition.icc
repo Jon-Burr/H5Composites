@@ -1,0 +1,75 @@
+#include "H5Composites/CompDTypeUtils.h"
+
+namespace H5Composites
+{
+    template <typename T>
+    template <typename U>
+    std::enable_if_t<is_wrapper_type_v<U>, void> CompositeDefinition<T>::add(
+        UnderlyingType_t<U> T::*ptr, const std::string &name)
+    {
+        m_pieces.push_back(std::make_unique<Piece<U>>(ptr, name));
+    }
+
+    template <typename T>
+    template <typename U>
+    std::enable_if_t<!is_wrapper_type_v<U>, void> CompositeDefinition<T>::add(
+        U T::*ptr, const std::string &name)
+    {
+        m_pieces.push_back(std::make_unique<Piece<U>>(ptr, name));
+    }
+
+    template <typename T>
+    H5::CompType CompositeDefinition<T>::dtype(const T &obj) const
+    {
+        std::vector<std::pair<H5::DataType, std::string>> pieces;
+        pieces.reserve(m_pieces.size());
+        for (const auto &piece : m_pieces)
+            pieces.emplace_back(piece->dtype(obj), piece->name);
+        return createCompoundDType(pieces);
+    }
+
+    template <typename T>
+    void CompositeDefinition<T>::writeBuffer(const T &obj, void *buffer) const
+    {
+        H5::CompType fullDType = dtype(obj);
+        for (const auto &piece : m_pieces)
+            piece->writeFrom(obj, buffer, fullDType);
+    }
+
+    template <typename T>
+    void CompositeDefinition<T>::readBuffer(T &obj, const void *buffer, const H5::DataType &dtype) const
+    {
+        H5::CompType fullDType = dtype.getId();
+        for (const auto &piece : m_pieces)
+            piece->readTo(obj, buffer, fullDType);
+    }
+
+    template <typename T>
+    CompositeDefinition<T>::IPiece::IPiece(const std::string &name) : name(name) {}
+
+    template <typename T>
+    template <typename U>
+    CompositeDefinition<T>::Piece<U>::Piece(UnderlyingType_t<U> T::*ptr, const std::string &name)
+        : IPiece(name), ptr(ptr) {}
+
+    template <typename T>
+    template <typename U>
+    H5::DataType CompositeDefinition<T>::Piece<U>::dtype(const T &obj) const
+    {
+        return getH5DType<U>(obj.*ptr);
+    }
+
+    template <typename T>
+    template <typename U>
+    void CompositeDefinition<T>::Piece<U>::readTo(T &obj, const void *buffer, const H5::CompType &fullDType) const
+    {
+        obj.*ptr = readCompositeElement<U>(buffer, fullDType, this->name);
+    }
+
+    template <typename T>
+    template <typename U>
+    void CompositeDefinition<T>::Piece<U>::writeFrom(const T &obj, void *buffer, const H5::CompType &fullDType) const
+    {
+        writeCompositeElement<U>(obj.*ptr, buffer, fullDType, this->name);
+    }
+}
