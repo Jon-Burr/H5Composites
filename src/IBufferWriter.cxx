@@ -18,7 +18,7 @@ namespace H5Composites
 {
     IBufferWriter::~IBufferWriter() {}
 
-    void IBufferWriter::writerBufferWithType(
+    void IBufferWriter::writeBufferWithType(
         void *buffer,
         const H5::DataType &targetDType) const
     {

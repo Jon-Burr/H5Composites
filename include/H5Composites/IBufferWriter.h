@@ -34,7 +34,7 @@ namespace H5Composites {
          * @param buffer The buffer to write to
          * @param dtype The data type of the target space
          */
-        virtual void writerBufferWithType(void *buffer, const H5::DataType &targetDType) const;
+        virtual void writeBufferWithType(void *buffer, const H5::DataType &targetDType) const;
 
     }; //> end class IBufferWriter
 } //> end namespace H5Composites
