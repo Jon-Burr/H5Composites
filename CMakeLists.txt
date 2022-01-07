@@ -7,6 +7,7 @@ find_package(Boost 1.66 COMPONENTS unit_test_framework program_options REQUIRED)
 add_library(H5Composites)
 target_sources(H5Composites
 PRIVATE
+    src/CompDTypeUtils.cxx
     src/DataSetUtils.cxx
     src/DTypeConverter.cxx
     src/DTypeIterator.cxx

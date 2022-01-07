@@ -15,8 +15,20 @@
 #include "H5Cpp.h"
 #include "H5Composites/DTypes.h"
 #include <string>
+#include <utility>
+#include <vector>
 
-namespace H5Composites {
+namespace H5Composites
+{
+
+    /**
+     * @brief Create a compound data type
+     * 
+     * @param components The individual pieces of the data type 
+     * @return The finalised compound data type
+     */
+    H5::CompType createCompoundDType(
+        const std::vector<std::pair<H5::DataType, std::string>> &components);
 
     /**
      * @brief Get a H5 compound data type from a range of elements
@@ -144,8 +156,7 @@ namespace H5Composites {
         Iterator begin,
         Iterator end,
         void *buffer,
-        const H5::CompType &dtype
-    );
+        const H5::CompType &dtype);
 
     /**
      * @brief Write the provided range to the buffer with the specified data type
@@ -164,8 +175,7 @@ namespace H5Composites {
         Iterator begin,
         Iterator end,
         void *buffer,
-        const H5::CompType &dtype
-    );
+        const H5::CompType &dtype);
 }
 
 #include "H5Composites/CompDTypeUtils.icc"
