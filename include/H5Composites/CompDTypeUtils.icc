@@ -13,7 +13,8 @@
 #include "H5Composites/BufferReadTraits.h"
 #include "H5Composites/BufferWriteTraits.h"
 
-namespace H5Composites {
+namespace H5Composites
+{
 
     template <typename Iterator>
     H5::CompType getCompoundDTypeFromRange(Iterator begin, Iterator end)
@@ -41,8 +42,7 @@ namespace H5Composites {
             dtype.insertMember(
                 "element" + std::to_string(idx),
                 offset,
-                dtypes.at(idx)
-            );
+                dtypes.at(idx));
             offset += dtypes.at(idx).getSize();
         }
         return dtype;
@@ -52,9 +52,8 @@ namespace H5Composites {
     UnderlyingType_t<T> readCompositeElement(const void *buffer, const H5::CompType &dtype, std::size_t idx)
     {
         return BufferReadTraits<T>::read(
-            reinterpret_cast<const std::byte *>(buffer) + dtype.getMemberOffset(idx),
-            dtype.getMemberDataType(idx)
-        );
+            getMemberPointer(buffer, dtype, idx),
+            dtype.getMemberDataType(idx));
     }
 
     template <typename T>
@@ -62,7 +61,6 @@ namespace H5Composites {
     {
         return readCompositeElement<T>(buffer, dtype, dtype.getMemberIndex(name));
     }
-
 
     template <typename Iterator>
     void readRangeFromCompoundDType(const void *buffer, const H5::CompType &dtype, Iterator out)
@@ -86,9 +84,8 @@ namespace H5Composites {
     {
         BufferWriteTraits<T>::write(
             val,
-            reinterpret_cast<std::byte*>(buffer) + dtype.getMemberOffset(idx),
-            dtype.getMemberDataType(idx)
-        );
+            getMemberPointer(buffer, dtype, idx),
+            dtype.getMemberDataType(idx));
     }
 
     template <typename T>
@@ -106,8 +103,7 @@ namespace H5Composites {
         Iterator begin,
         Iterator end,
         void *buffer,
-        const H5::CompType &dtype
-    )
+        const H5::CompType &dtype)
     {
         writeRangeToCompoundDType<std::decay_t<decltype(*begin)>>(begin, end, buffer, dtype);
     }
@@ -117,8 +113,7 @@ namespace H5Composites {
         Iterator begin,
         Iterator end,
         void *buffer,
-        const H5::CompType &dtype
-    )
+        const H5::CompType &dtype)
     {
         if (std::distance(begin, end) != dtype.getSize())
             throw H5::DataTypeIException("Size of data-type does not match input range");

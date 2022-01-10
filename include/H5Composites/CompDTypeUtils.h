@@ -176,6 +176,46 @@ namespace H5Composites
         Iterator end,
         void *buffer,
         const H5::CompType &dtype);
+
+    /**
+     * @brief Get the pointer to the position in the buffer for the specified member
+     * 
+     * @param buffer The buffer for the whole composite data type
+     * @param dtype The composite data type
+     * @param idx The member number
+     * @return Pointer to the position of that member
+     */
+    void *getMemberPointer(void *buffer, const H5::CompType &dtype, std::size_t idx);
+
+    /**
+     * @brief Get the pointer to the position in the buffer for the specified member
+     * 
+     * @param buffer The buffer for the whole composite data type
+     * @param dtype The composite data type
+     * @param name The name of the member
+     * @return Pointer to the position of that member
+     */
+    void *getMemberPointer(void *buffer, const H5::CompType &dtype, const std::string &name);
+
+    /**
+     * @brief Get the pointer to the position in the buffer for the specified member
+     * 
+     * @param buffer The buffer for the whole composite data type
+     * @param dtype The composite data type
+     * @param idx The member number
+     * @return Pointer to the position of that member
+     */
+    const void *getMemberPointer(const void *buffer, const H5::CompType &dtype, std::size_t idx);
+
+    /**
+     * @brief Get the pointer to the position in the buffer for the specified member
+     * 
+     * @param buffer The buffer for the whole composite data type
+     * @param dtype The composite data type
+     * @param name The name of the member
+     * @return Pointer to the position of that member
+     */
+    const void *getMemberPointer(const void *buffer, const H5::CompType &dtype, const std::string &name);
 }
 
 #include "H5Composites/CompDTypeUtils.icc"

@@ -24,4 +24,23 @@ namespace H5Composites
         return dtype;
     }
 
+    void *getMemberPointer(void *buffer, const H5::CompType &dtype, std::size_t idx)
+    {
+        return static_cast<std::byte *>(buffer) + dtype.getMemberOffset(idx);
+    }
+
+    void *getMemberPointer(void *buffer, const H5::CompType &dtype, const std::string &name)
+    {
+        return getMemberPointer(buffer, dtype, dtype.getMemberIndex(name));
+    }
+
+    const void *getMemberPointer(const void *buffer, const H5::CompType &dtype, std::size_t idx)
+    {
+        return static_cast<const std::byte *>(buffer) + dtype.getMemberOffset(idx);
+    }
+
+    const void *getMemberPointer(const void *buffer, const H5::CompType &dtype, const std::string &name)
+    {
+        return getMemberPointer(buffer, dtype, dtype.getMemberIndex(name));
+    }
 }
