@@ -84,6 +84,30 @@ namespace H5Composites
          */
         const H5::EnumType &enumType();
 
+        class RegistreeBase
+        {
+        public:
+            virtual id_t getTypeID() const = 0;
+
+        protected:
+            RegistreeBase() = default;
+        };
+
+        template <typename T>
+        class Registree : virtual public RegistreeBase
+        {
+        public:
+            static inline const id_t typeID = instance().registerType(T::registeredName());
+            id_t getTypeID() const override { return T::typeID; }
+
+        protected:
+            Registree()
+            {
+                // Force ODR-use of type to ensure registration
+                (void)typeID;
+            }
+        };
+
     private:
         TypeRegister() = default;
         id_t m_currentID{0};
