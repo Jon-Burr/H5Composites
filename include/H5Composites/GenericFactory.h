@@ -15,6 +15,9 @@
 #include "H5Composites/TypeRegister.h"
 #include "H5Composites/H5Buffer.h"
 #include "H5Composites/IBufferWriter.h"
+#include "H5Composites/DTypes.h"
+#include "H5Composites/BufferReadTraits.h"
+#include "H5Composites/BufferWriteTraits.h"
 #include <memory>
 #include <functional>
 #include <type_traits>
@@ -42,10 +45,6 @@ namespace H5Composites
 
         std::unique_ptr<Base> create(TypeRegister::id_t id, const H5Buffer &buffer) const;
 
-        //private:
-        GenericFactory() = default;
-        std::map<TypeRegister::id_t, factory_t> m_factories;
-
         template <typename T>
         class Registree : virtual public TypeRegister::Registree<T>
         {
@@ -56,31 +55,38 @@ namespace H5Composites
             Registree() { (void)registered; }
         };
 
-        /// Wrapper type for reading/writing registered objects
-        class UPtr
-        {
-            using UnderlyingType = std::unique_ptr<Base>;
-        };
+    private:
+        GenericFactory() = default;
+        std::map<TypeRegister::id_t, factory_t> m_factories;
 
     }; //> end class GenericFactory
 
     template <typename Base>
-    struct H5DType<GenericFactory<Base>::UPtr>
+    struct GenericFactoryUPtr {};
+
+    template <typename Base>
+    struct UnderlyingType<GenericFactoryUPtr<Base>>
+    {
+        using type = std::unique_ptr<Base>;
+    };
+
+    template <typename Base>
+    struct H5DType<GenericFactoryUPtr<Base>>
     {
         static H5::DataType getType(const std::unique_ptr<Base> &value);
     };
 
     template <typename Base>
-    struct BufferReadTraits<GenericFactory<Base>::UPtr>
+    struct BufferReadTraits<GenericFactoryUPtr<Base>>
     {
         static std::unique_ptr<Base> read(const void *buffer, const H5::DataType &dtype);
     };
 
     template <typename Base>
-    struct BufferWriteTraits<GenericFactory<Base>::UPtr>
+    struct BufferWriteTraits<GenericFactoryUPtr<Base>>
     {
         static void write(const std::unique_ptr<Base> &value, void *buffer, const H5::DataType &dtype);
-    }
+    };
 } //> end namespace H5Composites
 
 #include "H5Composites/GenericFactory.icc"

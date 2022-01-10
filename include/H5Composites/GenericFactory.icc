@@ -50,7 +50,7 @@ namespace H5Composites
     }
 
     template <typename Base>
-    H5::DataType H5DType<GenericFactory<Base>::UPtr>::getType(const std::unique_ptr<Base> &value)
+    H5::DataType H5DType<GenericFactoryUPtr<Base>>::getType(const std::unique_ptr<Base> &value)
     {
         std::vector<std::pair<H5::DataType, std::string>> components;
         components.reserve(2);
@@ -60,7 +60,7 @@ namespace H5Composites
     }
 
     template <typename Base>
-    std::unique_ptr<Base> BufferReadTraits<GenericFactory<Base>::UPtr>::read(
+    std::unique_ptr<Base> BufferReadTraits<GenericFactoryUPtr<Base>>::read(
         const void *buffer, const H5::DataType &dtype)
     {
         H5::CompType compDType(dtype.getId());
@@ -68,12 +68,12 @@ namespace H5Composites
             buffer, compDType, "typeID");
         return GenericFactory<Base>::instance().create(
             typeID,
-            getMemberPointer(buffer, compDtype, "data"),
+            getMemberPointer(buffer, compDType, "data"),
             compDType.getMemberDataType(compDType.getMemberIndex("data")));
     }
 
     template <typename Base>
-    void BufferWriteTraits<GenericFactory<Base>::UPtr>::write(
+    void BufferWriteTraits<GenericFactoryUPtr<Base>>::write(
         const std::unique_ptr<Base> &value, void *buffer, const H5::DataType &dtype)
     {
         H5::CompType compDType(dtype.getId());

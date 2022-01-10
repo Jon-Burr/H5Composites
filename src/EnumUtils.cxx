@@ -1,6 +1,8 @@
 #include "H5Composites/EnumUtils.h"
 #include "H5Composites/H5Buffer.h"
 
+#include <stdexcept>
+
 namespace H5Composites
 {
     std::string getEnumNameByIndex(
