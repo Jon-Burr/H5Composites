@@ -4,7 +4,7 @@ project(H5Composites VERSION 0.1.0)
 find_package(HDF5 COMPONENTS CXX REQUIRED)
 find_package(Boost 1.66 COMPONENTS unit_test_framework program_options REQUIRED)
 
-add_library(H5Composites)
+add_library(H5Composites SHARED)
 target_sources(H5Composites
 PRIVATE
     src/CompDTypeUtils.cxx

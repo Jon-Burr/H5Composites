@@ -14,6 +14,7 @@
 
 #include "H5Cpp.h"
 #include "H5Composites/DTypes.h"
+#include <boost/preprocessor.hpp>
 #include <string>
 #include <set>
 #include <type_traits>

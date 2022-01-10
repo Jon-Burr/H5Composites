@@ -35,9 +35,9 @@ namespace H5Composites
          * 
          * Only used for wrapper types
          */
-        template <typename U>
-        std::enable_if_t<is_wrapper_type_v<U>, void> add(
-            UnderlyingType_t<U> T::*ptr, const std::string &name);
+        template <typename U, typename B>
+        std::enable_if_t<is_wrapper_type_v<U> && std::is_base_of_v<B, T>, void> add(
+            UnderlyingType_t<U> B::*ptr, const std::string &name);
 
         /**
          * @brief Add a new member to the definition
@@ -48,8 +48,8 @@ namespace H5Composites
          * 
          * Only used for non-wrapper types
          */
-        template <typename U>
-        std::enable_if_t<!is_wrapper_type_v<U>, void> add(U T::*ptr, const std::string &name);
+        template <typename U, typename B>
+        std::enable_if_t<!is_wrapper_type_v<U> && std::is_base_of_v<B, T>, void> add(U B::*ptr, const std::string &name);
 
         /**
          * @brief Get the data type of the provided object given this definition

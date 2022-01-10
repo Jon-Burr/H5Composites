@@ -3,17 +3,17 @@
 namespace H5Composites
 {
     template <typename T>
-    template <typename U>
-    std::enable_if_t<is_wrapper_type_v<U>, void> CompositeDefinition<T>::add(
-        UnderlyingType_t<U> T::*ptr, const std::string &name)
+    template <typename U, typename B>
+    std::enable_if_t<is_wrapper_type_v<U> && std::is_base_of_v<B, T>, void> CompositeDefinition<T>::add(
+        UnderlyingType_t<U> B::*ptr, const std::string &name)
     {
         m_pieces.push_back(std::make_unique<Piece<U>>(ptr, name));
     }
 
     template <typename T>
-    template <typename U>
-    std::enable_if_t<!is_wrapper_type_v<U>, void> CompositeDefinition<T>::add(
-        U T::*ptr, const std::string &name)
+    template <typename U, typename B>
+    std::enable_if_t<!is_wrapper_type_v<U> && std::is_base_of_v<B, T>, void> CompositeDefinition<T>::add(
+        U B::*ptr, const std::string &name)
     {
         m_pieces.push_back(std::make_unique<Piece<U>>(ptr, name));
     }
@@ -63,7 +63,7 @@ namespace H5Composites
     template <typename U>
     void CompositeDefinition<T>::Piece<U>::readTo(T &obj, const void *buffer, const H5::CompType &fullDType) const
     {
-        obj.*ptr = readCompositeElement<U>(buffer, fullDType, this->name);
+        obj.*ptr = std::move(readCompositeElement<U>(buffer, fullDType, this->name));
     }
 
     template <typename T>
