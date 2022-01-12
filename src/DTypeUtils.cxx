@@ -54,8 +54,8 @@ namespace
                 *this = H5::FloatType(dtype.getId());
                 break;
             default:
-                throw H5::DataTypeIException(
-                    "H5Composites::AtomTypeInfo",
+                throw std::invalid_argument(
+                    //"H5Composites::AtomTypeInfo",
                     "Invalid type passed to function");
             }
         }
@@ -206,8 +206,8 @@ namespace H5Composites
             [native_id](const H5::PredType &c)
             { return H5Tequal(native_id, c.getId()); });
         if (itr == candidates.end())
-            throw H5::DataTypeIException(
-                "H5Composites::getNativeNumericDType",
+            throw std::invalid_argument(
+                //"H5Composites::getNativeNumericDType",
                 "Not a numeric data type");
         return *itr;
     }
@@ -215,14 +215,14 @@ namespace H5Composites
     H5::PredType getNativeBitfieldDType(const H5::DataType &dtype)
     {
         if (dtype.getClass() != H5T_BITFIELD)
-            throw H5::DataTypeIException(
-                "H5Composites::getNativeBitfieldDType",
+            throw std::invalid_argument(
+                //"H5Composites::getNativeBitfieldDType",
                 "Not a bitfield data type!");
         H5::IntType intType = dtype.getId();
         std::size_t precision = intType.getPrecision();
         if (precision > 64)
-            throw H5::DataTypeIException(
-                "H5Composites::getNativeBitfieldDType",
+            throw std::invalid_argument(
+                //"H5Composites::getNativeBitfieldDType",
                 "No native bitfield type large enough");
         if (precision <= 8)
             return H5::PredType::NATIVE_B8;
@@ -246,8 +246,8 @@ namespace H5Composites
         case H5T_BITFIELD:
             return getNativeBitfieldDType(dtype);
         default:
-            throw H5::DataTypeIException(
-                "H5Composites::getNativePredefinedDType",
+            throw std::invalid_argument(
+                //"H5Composites::getNativePredefinedDType",
                 "No native predefined type exists!");
         }
         return H5::PredType::NATIVE_OPAQUE;
@@ -356,8 +356,8 @@ namespace H5Composites
             if (*itr >= info)
                 break;
         if (itr == candidates.end())
-            throw H5::DataTypeIException(
-                "H5Composites::getCommonNumericDType",
+            throw std::invalid_argument(
+                //"H5Composites::getCommonNumericDType",
                 "No native data type large enough exists!");
         return *itr;
     }
@@ -398,8 +398,8 @@ namespace H5Composites
         std::optional<std::vector<hsize_t>> dims;
         for (const H5::ArrayType &dtype : dtypes)
             if (!enforceEqual(dims, getArrayDims(dtype)))
-                throw H5::DataTypeIException(
-                    "H5Composites::getCommonArrayDType",
+                throw std::invalid_argument(
+                    //"H5Composites::getCommonArrayDType",
                     "Array dimensions do not match!");
         return H5::ArrayType(commonSuper, dims->size(), dims->data());
     }
@@ -494,8 +494,8 @@ namespace H5Composites
         case H5T_ARRAY:
             return getCommonArrayDType(convertTypes<H5::ArrayType>(dtypes.begin(), dtypes.end()));
         default:
-            throw H5::DataTypeIException(
-                "H5Composites::getCommonDType",
+            throw std::invalid_argument(
+                //"H5Composites::getCommonDType",
                 "Unexpected data type received");
         }
     }

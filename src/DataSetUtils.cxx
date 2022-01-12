@@ -1,25 +1,11 @@
 #include "H5Composites/DataSetUtils.h"
 #include "H5Composites/DTypeUtils.h"
 #include "H5Composites/SmartBuffer.h"
+#include "H5Composites/MergeUtils.h"
 
 #include <optional>
 #include <stdexcept>
 
-namespace
-{
-    template <typename T>
-    bool enforceEqual(std::optional<T> &currentValue, const T &newValue)
-    {
-        if (currentValue.has_value())
-        {
-            if (*currentValue != newValue)
-                return false;
-        }
-        else
-            currentValue.emplace(newValue);
-        return true;
-    }
-}
 
 namespace H5Composites
 {

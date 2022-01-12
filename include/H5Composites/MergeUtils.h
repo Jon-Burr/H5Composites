@@ -115,6 +115,19 @@ namespace H5Composites
     using BitOr = detail::ParallelMerger<std::bit_or, detail::FalseIdentity, detail::supports_boolean>;
     using BitAnd = detail::ParallelMerger<std::bit_and, detail::TrueIdentity, detail::supports_boolean>;
 
+    
+    template <typename T>
+    bool enforceEqual(std::optional<T> &currentValue, const T &newValue)
+    {
+        if (currentValue.has_value())
+        {
+            if (*currentValue != newValue)
+                return false;
+        }
+        else
+            currentValue.emplace(newValue);
+        return true;
+    }
 }
 
 #include "H5Composites/MergeUtils.icc"

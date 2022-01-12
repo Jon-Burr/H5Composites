@@ -74,7 +74,7 @@ namespace H5Composites {
             // Check that the size is correct. Let H5 throw the error if it's not a CompType
             H5::CompType compDType(dtype.getId());
             if (compDType.getNmembers() != N)
-                throw H5::DataTypeIException(
+                throw std::invalid_argument(
                     "Incorrect number of elements in data type: " +
                     std::to_string(compDType.getNmembers()) + " vs " +
                     std::to_string(N) + " expected");

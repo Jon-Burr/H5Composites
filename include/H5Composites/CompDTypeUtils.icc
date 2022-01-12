@@ -115,8 +115,8 @@ namespace H5Composites
         void *buffer,
         const H5::CompType &dtype)
     {
-        if (std::distance(begin, end) != dtype.getSize())
-            throw H5::DataTypeIException("Size of data-type does not match input range");
+        if (std::distance(begin, end) != dtype.getNmembers())
+            throw std::invalid_argument("Size of data-type does not match input range");
         std::size_t idx = 0;
         for (Iterator itr = begin; itr != end; ++itr, ++idx)
             writeCompositeElement<T>(*itr, buffer, dtype, idx);

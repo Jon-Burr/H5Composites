@@ -242,8 +242,8 @@ namespace H5Composites
     {
         DTypeConverter converter(sourceDType, targetDType);
         if (!converter.isValid(allowNarrowing, allowArrayReordering, allowDiscarding, allowUnknown))
-            throw H5::DataTypeIException(
-                "H5Composites::convert",
+            throw std::invalid_argument(
+                //"H5Composites::convert",
                 to_string(sourceDType) + " -> " + to_string(targetDType));
         return converter.convert(source);
     }

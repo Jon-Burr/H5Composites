@@ -61,7 +61,7 @@ namespace H5Composites
                 H5::ArrayType arrType = dtype.getId();
                 std::vector<hsize_t> dims = getArrayDims(arrType);
                 if (dims.size() != 1)
-                    throw H5::DataTypeIException("Unexpected number of array dimensions!");
+                    throw std::invalid_argument("Unexpected number of array dimensions!");
                 H5Buffer tmp;
                 if (arrType.getSuper() != getH5DType<T>())
                 {
