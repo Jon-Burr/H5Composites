@@ -1,7 +1,5 @@
 #include "H5Composites/CompDTypeUtils.h"
 
-#include <iostream>
-
 namespace H5Composites
 {
     template <typename Base>
@@ -15,7 +13,6 @@ namespace H5Composites
     template <typename T>
     std::enable_if_t<std::is_base_of_v<Base, T>, bool> GenericFactory<Base>::registerFactory()
     {
-        std::cout << "Register ID " << TypeIDTraits<T>::typeID() << std::endl;
         return m_factories.emplace(
                               TypeIDTraits<T>::typeID(),
                               [](const void *buffer, const H5::DataType &dtype)
