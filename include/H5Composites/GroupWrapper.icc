@@ -62,7 +62,7 @@ namespace H5Composites
         std::size_t cacheSize,
         std::size_t chunkSize)
     {
-        return TypedWriter<T>(*this, name, cacheSize, chunkSize);
+        return TypedWriter<T>(m_group, name, cacheSize, chunkSize);
     }
 
     template <typename T, typename... Args>
