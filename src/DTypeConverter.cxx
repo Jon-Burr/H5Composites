@@ -4,6 +4,7 @@
 #include "H5Composites/DTypePrinter.h"
 #include <algorithm>
 #include <cstring>
+#include <optional>
 
 namespace
 {

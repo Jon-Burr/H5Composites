@@ -22,6 +22,7 @@
 #include <type_traits>
 #include <functional>
 #include <bitset>
+#include <optional>
 
 namespace H5Composites
 {

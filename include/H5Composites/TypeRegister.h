@@ -28,6 +28,7 @@
 #include <map>
 #include <type_traits>
 #include <limits>
+#include <optional>
 
 namespace H5Composites
 {
