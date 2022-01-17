@@ -36,7 +36,7 @@ namespace H5Composites
         const std::string &name,
         TypeRegister::id_t typeID)
     {
-        return writeScalar<T>(obj, name, toBuffer(typeID));
+        return writeScalar<T>(obj, name, (typeID == TypeRegister::nullID) ? H5Buffer() : toBuffer(typeID));
     }
 
     template <typename T>
