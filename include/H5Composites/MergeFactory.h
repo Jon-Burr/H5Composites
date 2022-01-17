@@ -52,6 +52,10 @@ namespace H5Composites
     };
 } //> end namespace H5Composites
 
+#define H5COMPOSITES_DECLARE_MERGE() \
+    const static bool mergeRegistered; \
+    static H5Composites::H5Buffer mergeBuffers(const std::vector<std::pair<H5::DataType, const void *>> &buffers);
+
 #define H5COMPOSITES_REGISTER_MERGE(type)                                                   \
     const bool type::mergeRegistered = H5Composites::MergeFactory::instance().registerRule( \
         H5Composites::TypeIDTraits<type>::typeID(),                                         \

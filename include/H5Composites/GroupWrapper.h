@@ -22,8 +22,10 @@ namespace H5Composites
     class GroupWrapper
     {
     public:
-        GroupWrapper(const H5::Group &inputGroup);
+        GroupWrapper(const H5::Group &inputGroup, const H5::EnumType &registerType);
+        GroupWrapper(const H5::H5File &inputFile, const H5::EnumType &registerType);
 
+        static bool hasTypeEnum(const H5::Group &group);
         static H5::EnumType getTypeEnum(const H5::Group &group);
         static GroupWrapper readFile(const std::string &name, bool update = false);
         static GroupWrapper createFile(const std::string &name, bool overwrite = false);
@@ -61,6 +63,7 @@ namespace H5Composites
 
     private:
         H5::Group m_group;
+        H5::EnumType m_registerType;
         template <typename T>
         H5::DataSet writeScalar(
             const UnderlyingType_t<T> &obj,

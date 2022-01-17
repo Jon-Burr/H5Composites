@@ -156,7 +156,7 @@ namespace H5Composites
         H5T_cdata_t *cdata{nullptr};
         m_source.find(m_target, &cdata);
         if (!cdata)
-            throw H5::DataTypeIException("H5Composites::convert", "Could not create cdata");
+            throw std::runtime_error("Could not create cdata");
         SmartBuffer background;
         if (cdata->need_bkg != H5T_BKG_NO)
             background = SmartBuffer(size, 0);

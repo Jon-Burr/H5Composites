@@ -36,10 +36,7 @@ namespace H5Composites
         const std::string &name,
         TypeRegister::id_t typeID)
     {
-        const H5::EnumType &enumType = TypeRegister::instance().enumType();
-        H5Buffer buffer(enumType);
-        BufferWriteTraits<TypeRegister::id_t>::write(typeID, buffer.get(), enumType.getSuper());
-        return writeScalar<T>(obj, name, buffer);
+        return writeScalar<T>(obj, name, toBuffer(typeID));
     }
 
     template <typename T>
@@ -53,7 +50,7 @@ namespace H5Composites
         ds.write(buffer.get(), buffer.dtype());
         if (fileTypeID)
         {
-            H5::Attribute attr = ds.createAttribute("typeID", TypeRegister::instance().enumType(), H5S_SCALAR);
+            H5::Attribute attr = ds.createAttribute("typeID", m_registerType, H5S_SCALAR);
             attr.write(fileTypeID.dtype(), fileTypeID.get());
         }
         return ds;

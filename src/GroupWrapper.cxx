@@ -2,12 +2,22 @@
 
 namespace H5Composites
 {
-    GroupWrapper::GroupWrapper(const H5::Group &inputGroup)
-        : m_group(inputGroup)
+    GroupWrapper::GroupWrapper(const H5::Group &inputGroup, const H5::EnumType &registerType)
+        : m_group(inputGroup), m_registerType(registerType)
     {
     }
 
-    H5::EnumType getTypeEnum(const H5::Group &group)
+    GroupWrapper::GroupWrapper(const H5::H5File &inputFile, const H5::EnumType &registerType)
+        : m_group(inputFile.openGroup("/")), m_registerType(registerType)
+    {
+    }
+
+    bool GroupWrapper::hasTypeEnum(const H5::Group &group)
+    {
+        return group.exists("TypeRegister");
+    }
+
+    H5::EnumType GroupWrapper::getTypeEnum(const H5::Group &group)
     {
         return group.openEnumType("TypeRegister");
     }
@@ -15,15 +25,16 @@ namespace H5Composites
     GroupWrapper GroupWrapper::readFile(const std::string &name, bool update)
     {
         H5::H5File file(name, update ? H5F_ACC_RDWR : H5F_ACC_RDONLY);
-        return GroupWrapper(file);
+        return GroupWrapper(file, hasTypeEnum(file) ? getTypeEnum(file) : TypeRegister::instance().enumType());
     }
 
     GroupWrapper GroupWrapper::createFile(const std::string &name, bool overwrite)
     {
         H5::H5File file(name, overwrite ? H5F_ACC_TRUNC : H5F_ACC_EXCL);
-        H5::EnumType typeRegister = TypeRegister::instance().enumType();
+        H5::EnumType typeRegister;
+        typeRegister.copy(TypeRegister::instance().enumType());
         typeRegister.commit(file, "TypeRegister");
-        return GroupWrapper(file);
+        return GroupWrapper(file, typeRegister);
     }
 
     std::size_t GroupWrapper::size() const
@@ -71,11 +82,11 @@ namespace H5Composites
 
     GroupWrapper GroupWrapper::readGroup(const std::string &name)
     {
-        return GroupWrapper(m_group.openGroup(name));
+        return GroupWrapper(m_group.openGroup(name), m_registerType);
     }
 
     GroupWrapper GroupWrapper::createGroup(const std::string &name)
     {
-        return GroupWrapper(m_group.createGroup(name));
+        return GroupWrapper(m_group.createGroup(name), m_registerType);
     }
 } //> end namespace H5Composites

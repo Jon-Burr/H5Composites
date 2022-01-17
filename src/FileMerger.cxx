@@ -15,10 +15,13 @@ namespace H5Composites
         const std::vector<std::string> &inNames,
         std::size_t bufferSize,
         std::size_t mergeAxis)
-        : m_output(H5::H5File(name, H5F_ACC_TRUNC)),
+        : m_output(H5::H5File(name, H5F_ACC_TRUNC).openGroup("/")),
           m_bufferSize(bufferSize),
           m_mergeAxis(mergeAxis)
     {
+        m_inputFiles.reserve(inNames.size());
+        for (const std::string &name : inNames)
+            m_inputFiles.push_back(H5::H5File(name, H5F_ACC_RDONLY).openGroup("/"));
     }
 
     void FileMerger::merge()
@@ -44,18 +47,20 @@ namespace H5Composites
                 H5G_obj_t type = group.getObjTypeByIdx(jj);
                 auto itr = foundObjects.find(name);
                 if (itr != foundObjects.end())
+                {
                     if (!enforceEqual(itr->second.first, type))
                         throw std::invalid_argument(
                             "Mismatch between object types for " + name);
-                    else
-                    {
-                        itr = foundObjects.emplace(
-                                              name,
-                                              std::pair<H5G_obj_t, std::vector<std::size_t>>{type, {}})
-                                  .first;
-                        if (type == H5G_TYPE)
-                            dataTypes.push_back(name);
-                    }
+                }
+                else
+                {
+                    itr = foundObjects.emplace(
+                                            name,
+                                            std::pair<H5G_obj_t, std::vector<std::size_t>>{type, {}})
+                                .first;
+                    if (type == H5G_TYPE)
+                        dataTypes.push_back(name);
+                } 
                 itr->second.second.push_back(ii);
             }
         }
@@ -82,6 +87,7 @@ namespace H5Composites
                     groups.push_back(inputGroups.at(ii).openGroup(p1.first));
                 H5::Group newGroup = outputGroup.createGroup(p1.first);
                 mergeGroups(newGroup, groups);
+                break;
             }
             case H5G_DATASET:
             {
@@ -99,10 +105,11 @@ namespace H5Composites
                     mergeScalars(outputGroup, p1.first, dsets);
                 else
                     mergeDataSets(outputGroup, p1.first, dsets);
+                break;
             }
             default:
                 // TODO - handle links and references - they shouldn't be too hard
-                throw std::invalid_argument("Unexpected object type");
+                throw std::invalid_argument("Unexpected object type " + std::to_string(*p1.second.first));;
             }
         }
     }

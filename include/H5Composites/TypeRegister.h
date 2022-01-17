@@ -19,6 +19,9 @@
 #endif
 
 #include "H5Cpp.h"
+#include "H5Composites/DTypes.h"
+#include "H5Composites/BufferReadTraits.h"
+#include "H5Composites/BufferWriteTraits.h"
 
 #include "boost/tti/has_static_member_data.hpp"
 #include <string>
@@ -32,12 +35,14 @@ namespace H5Composites
     {
     public:
         /// The type used for IDs
-        using id_t = H5COMPOSITES_IDTYPE;
-        /// The null value for IDs
-        static constexpr inline id_t nullID = std::numeric_limits<id_t>::max();
+        struct id_t {
+            H5COMPOSITES_IDTYPE value;
+        };
 
-        static_assert(std::is_integral_v<id_t>, "The ID type must be an integer");
-        static_assert(std::is_unsigned_v<id_t>, "The ID type must be unsigned");
+        static_assert(std::is_integral_v<H5COMPOSITES_IDTYPE>, "The ID type must be an integer");
+        static_assert(std::is_unsigned_v<H5COMPOSITES_IDTYPE>, "The ID type must be unsigned");
+        /// The null value for IDs
+        static constexpr inline id_t nullID = {0};
 
         /// Get the instance
         static TypeRegister &instance();
@@ -68,6 +73,16 @@ namespace H5Composites
          * @return The ID stored in the attribute
          */
         id_t readID(const H5::Attribute &attr);
+
+        /**
+         * @brief Get the name corresponding to an ID
+         * 
+         * @param id The ID
+         * @throw std::out_of_range The ID is not known
+         * 
+         * Returns an empty string for the null ID
+         */
+        std::string getName(id_t id);
 
         /**
          * @brief Lock the register, not permitting adding new types
@@ -110,11 +125,33 @@ namespace H5Composites
 
     private:
         TypeRegister() = default;
-        id_t m_currentID{0};
+        H5COMPOSITES_IDTYPE m_currentID{1};
         bool m_locked{false};
         std::map<std::string, id_t> m_ids;
         std::optional<H5::EnumType> m_dtype;
     }; //> end class TypeRegister
+
+    bool operator==(TypeRegister::id_t lhs, TypeRegister::id_t rhs);
+    bool operator!=(TypeRegister::id_t lhs, TypeRegister::id_t rhs);
+    bool operator<(TypeRegister::id_t lhs, TypeRegister::id_t rhs);
+
+    template<>
+    struct H5DType<TypeRegister::id_t>
+    {
+        static H5::DataType getType();
+    };
+
+    template <>
+    struct BufferReadTraits<TypeRegister::id_t>
+    {
+        static TypeRegister::id_t read(const void *buffer, const H5::DataType &dtype);
+    };
+
+    template <>
+    struct BufferWriteTraits<TypeRegister::id_t>
+    {
+        static void write(const TypeRegister::id_t &value, void *buffer, const H5::DataType &dtype);
+    };
 
     // Create boost tti metafunctions
     BOOST_TTI_HAS_STATIC_MEMBER_DATA(typeID);
@@ -135,11 +172,20 @@ namespace H5Composites
 
 } //> end namespace H5Composites
 
-#define H5COMPOSITES_REGISTER_TYPE_WITH_NAME(type, name) \
-    const H5Composites::TypeRegister::id_t               \
-        type::typeID = H5Composites::TypeRegister::instance().registerType(name);
+#define H5COMPOSITES_DECLARE_TYPEID() \
+    const static H5Composites::TypeRegister::id_t typeID;
 
-#define H5COMPOSITES_REGISTER_TYPE(type) \
-    H5COMPOSITES_REGISTER_TYPE_WITH_NAME(type, #type)
+#define H5COMPOSITES_DECLARE_GETTYPEID() \
+    H5Composites::TypeRegister::id_t getTypeID() const override;
+
+#define H5COMPOSITES_REGISTER_TYPE_WITH_NAME(TYPE, NAME) \
+    const H5Composites::TypeRegister::id_t               \
+        TYPE::typeID = H5Composites::TypeRegister::instance().registerType(NAME);
+
+#define H5COMPOSITES_REGISTER_TYPE(TYPE) \
+    H5COMPOSITES_REGISTER_TYPE_WITH_NAME(TYPE, #TYPE)
+
+#define H5COMPOSITES_DEFINE_GETTYPEID(TYPE) \
+    H5Composites::TypeRegister::id_t TYPE::getTypeID() const { return TYPE::typeID; }
 
 #endif

@@ -8,62 +8,9 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <filesystem>
 
-namespace {
-    void mergeDataSets(H5::Group &outGroup, const std::vector<H5::DataSet> &datasets)
-    {
-
-    }
-
-    void mergeGroups(H5::Group &outGroup, const std::vector<H5::Group> &inGroups)
-    {
-        std::map<std::string, std::vector<std::size_t>> namesToIndices;
-        std::map<std::string, H5O_type_t> namesToTypes;
-        for (std::size_t ii = 0; ii < inGroups.size(); ++ii)
-        {
-            const H5::Group &group = inGroups.at(ii);
-            for (std::size_t jj = 0; jj < group.getNumObjs(); ++jj)
-            {
-                std::string name = group.getObjnameByIdx(jj);
-                H5O_type_t objType = group.childObjType(jj);
-                auto itr = namesToTypes.find(name);
-                if (itr != namesToTypes.end())
-                    if (itr->second != objType)
-                        throw std::invalid_argument(
-                            "Mismatch between object types for " + name
-                        );
-                else
-                    namesToTypes[name] = objType;
-                namesToIndices[name].push_back(ii);
-            }
-        }
-        for (const auto &p1 : namesToIndices)
-        {
-            switch(namesToTypes[p1.first])
-            {
-            case H5O_TYPE_GROUP:
-            {
-                std::vector<H5::Group> groups;
-                groups.reserve(inGroups.size());
-                for (std::size_t ii : p1.second)
-                    groups.push_back(inGroups.at(ii).openGroup(p1.first));
-                H5::Group newGroup = outGroup.createGroup(p1.first);
-                mergeGroups(newGroup, groups);
-            }
-            case H5O_TYPE_DATASET:
-            {
-                std::vector<H5::DataSet> dsets;
-                dsets.reserve(inGroups.size());
-                for (std::size_t ii : p1.second)
-                    dsets.push_back(inGroups.at(ii).openDataSet(p1.first));
-                // TODO merge
-            }
-            default:
-                throw std::invalid_argument("Unexpected data type");
-            }
-        }
-    }
-}
+#include "dlfcn.h"
 
 int main(int argc, char *argv[])
 {
@@ -73,6 +20,7 @@ int main(int argc, char *argv[])
     bool overwrite = false;
     std::string inCSV;
     std::vector<std::string> inputFiles;
+    std::vector<std::string> dynamicLibraries;
     std::size_t bufferSizeMB = 10;
 
 
@@ -84,6 +32,8 @@ int main(int argc, char *argv[])
      "The size of the buffer to use in MB. Cannot be set with 'bufferSizeRows'")
     ("overwrite,w", po::bool_switch(&overwrite),
      "Overwrite the output file if it already exists. Cannot be set with 'in-place'")
+    ("dynamic-link,l", po::value(&dynamicLibraries),
+    "Extra libraries to link at run time (for the static factories)")
     ("help,h", "Print this message and exit.");
 
     po::options_description hidden;
@@ -126,9 +76,26 @@ int main(int argc, char *argv[])
         std::cerr << "You cannot specify both bufferSizeMB and bufferSizeRows!" << std::endl;
         return 1;
     }
+
+    for (const std::string &lib : dynamicLibraries)
+    {
+        std::filesystem::path libPath = lib;
+        // Check if this is a path to a local location
+        if (libPath.is_relative() && std::filesystem::exists(libPath))
+            // If so, make it absolute so that dlopen interprets it correctly
+            libPath = std::filesystem::absolute(libPath);
+        std::cout << "Open library " << libPath << std::endl;
+        if (!dlopen(libPath.c_str(), RTLD_NOW))
+        {
+            std::cerr << "Failed to load dynamic library " << lib << std::endl;
+            return 1;
+        }
+    }
     std::size_t bufferSize = bufferSizeMB * 1024*1024;
     // Create the merger
+    std::cout << "Create merger" << std::endl;
     H5Composites::FileMerger merger(outputFile, inputFiles, bufferSize);
     // Perform the merging
+    std::cout << "Merge" << std::endl;
     merger.merge();
 }

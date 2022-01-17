@@ -33,10 +33,9 @@ namespace H5Composites
             template <typename> typename Condition>
         struct ParallelMerger
         {
-            static const TypeRegister::id_t typeID;
-            static H5Buffer mergeBuffers(const std::vector<std::pair<H5::DataType, const void *>> &buffers);
-            static const bool mergeRegistered;
-
+            H5COMPOSITES_DECLARE_TYPEID()
+            H5COMPOSITES_DECLARE_MERGE()
+            
             template <typename T>
             struct Functor
             {

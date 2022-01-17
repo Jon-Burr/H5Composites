@@ -89,5 +89,19 @@ namespace H5Composites
     };
 } //> end namespace H5Composites
 
+#define H5COMPOSITES_DECLARE_GENFACT_ONLY(BASE) \
+    const static bool BASE ## Registered;
+
+#define H5COMPOSITES_DECLARE_GENFACT(BASE) \
+    H5COMPOSITES_DECLARE_GENFACT_ONLY(BASE) \
+    H5COMPOSITES_DECLARE_GETTYPEID()
+
+#define H5COMPOSITES_REGISTER_GENFACT_ONLY(BASE, TYPE) \
+    const bool TYPE::BASE ## Registered = H5Composites::GenericFactory<BASE>::instance().registerFactory<TYPE>();
+
+#define H5COMPOSITES_REGISTER_GENFACT(BASE, TYPE) \
+    H5COMPOSITES_REGISTER_GENFACT_ONLY(BASE, TYPE) \
+    H5COMPOSITES_DEFINE_GETTYPEID(TYPE)
+
 #include "H5Composites/GenericFactory.icc"
 #endif //> !H5COMPOSITES_GENERICFACTORY_H

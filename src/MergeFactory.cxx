@@ -11,6 +11,10 @@ namespace H5Composites
 
     bool MergeFactory::registerRule(TypeRegister::id_t id, rule_t rule)
     {
+        if (id == TypeRegister::nullID)
+            throw std::invalid_argument("Cannot register using the null ID");
+        if (m_rules.count(id))
+            throw std::invalid_argument("Cannot re-register ID " + std::to_string(id.value));
         return m_rules.emplace(id, rule).second;
     }
 
@@ -66,6 +70,7 @@ namespace H5Composites
             dataSet.openAttribute("typeID").read(buffer.dtype(), buffer.get());
         else
             return TypeRegister::nullID;
-        return fromBuffer<TypeRegister::id_t>(buffer);
+        TypeRegister::id_t id = fromBuffer<TypeRegister::id_t>(buffer);
+        return id;
     }
 }
