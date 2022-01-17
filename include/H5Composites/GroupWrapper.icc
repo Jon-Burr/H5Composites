@@ -55,4 +55,45 @@ namespace H5Composites
         }
         return ds;
     }
+
+    template <typename T>
+    TypedWriter<T> GroupWrapper::makeDataSetWriter(
+        const std::string &name,
+        std::size_t cacheSize,
+        std::size_t chunkSize)
+    {
+        return TypedWriter<T>(*this, name, cacheSize, chunkSize);
+    }
+
+    template <typename T, typename... Args>
+    std::enable_if_t<std::is_constructible_v<UnderlyingType_t<T>, Args...>, ScalarWriter<T>> GroupWrapper::makeScalarWriter(
+        const std::string &name,
+        Args &&... args)
+    {
+        return makeScalarWriter<T>(*this, name, std::forward<Args&&>(args)...);
+    }
+
+    
+    template <typename T>
+    ScalarWriter<T>::ScalarWriter(GroupWrapper &group, const std::string &name, const UnderlyingType_t<T> &value)
+        : m_targetGroup(group), m_name(name), m_value(value)
+    {}
+
+    template <typename T>
+    ScalarWriter<T>::ScalarWriter(GroupWrapper &group, const std::string &name, UnderlyingType_t<T> &&value)
+        : m_targetGroup(group), m_name(name), m_value(std::move(value))
+    {}
+
+    template <typename T>
+    ScalarWriter<T>::~ScalarWriter()
+    {
+        m_targetGroup.writeScalar<T>(m_value, m_name);
+    }
+
+    template <typename T, typename... Args>
+    std::enable_if_t<std::is_constructible_v<UnderlyingType_t<T>, Args...>, ScalarWriter<T>> makeScalarHandle(
+        GroupWrapper &group, const std::string &name, Args &&... args)
+    {
+        return ScalarWriter<T>(group, name, UnderlyingType_t<T>(std::forward<Args&&>(args)...));
+    }
 }

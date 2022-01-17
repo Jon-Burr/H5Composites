@@ -16,9 +16,14 @@
 #include "H5Composites/DTypes.h"
 #include "H5Composites/TypeRegister.h"
 #include "H5Composites/H5Buffer.h"
+#include "H5Composites/TypedWriter.h"
+
 
 namespace H5Composites
 {
+    template <typename T>
+    class ScalarWriter;
+
     class GroupWrapper
     {
     public:
@@ -61,6 +66,17 @@ namespace H5Composites
         H5::Group &group() { return m_group; }
         const H5::Group &group() const { return m_group; }
 
+        template <typename T>
+        TypedWriter<T> makeDataSetWriter(
+            const std::string &name,
+            std::size_t cacheSize=2048,
+            std::size_t chunkSize=-1);
+
+        template <typename T, typename... Args>
+        std::enable_if_t<std::is_constructible_v<UnderlyingType_t<T>, Args...>, ScalarWriter<T>> makeScalarWriter(
+            const std::string &name,
+            Args &&... args);
+
     private:
         H5::Group m_group;
         H5::EnumType m_registerType;
@@ -70,6 +86,35 @@ namespace H5Composites
             const std::string &name,
             const H5Buffer &fileTypeID);
     }; //> end class GroupWrapper
+
+    template <typename T>
+    class ScalarWriter
+    {
+    public:
+        ScalarWriter(GroupWrapper &group, const std::string &name, const UnderlyingType_t<T> &value);
+        ScalarWriter(GroupWrapper &group, const std::string &name, UnderlyingType_t<T> &&value);
+
+        ~ScalarWriter();
+
+        // Explicitly disallow copying
+        ScalarWriter(const ScalarWriter &other) = delete;
+        ScalarWriter(ScalarWriter &&other) = default;
+
+        // Access operators
+        T &operator*() { return m_value; }
+        const T &operator*() const { return m_value; }
+        T *operator->() { return &m_value; }
+        const T *operator->() const { return &m_value; }
+
+    private:
+        GroupWrapper &m_targetGroup;
+        std::string m_name;
+        UnderlyingType_t<T> m_value;
+    }; //> end class ScalarWriter<T>
+
+    template <typename T, typename... Args>
+    std::enable_if_t<std::is_constructible_v<UnderlyingType_t<T>, Args...>, ScalarWriter<T>> makeScalarHandle(
+        GroupWrapper &group, const std::string &name, Args &&... args);
 } //> end namespace H5Composites
 
 #include "H5Composites/GroupWrapper.icc"

@@ -18,9 +18,9 @@
 namespace H5Composites
 {
     template <typename T>
-    class TypedWriter
+    class TypedWriter : public Writer
     {
-        static_assert(has_static_h5dtype<T>, "Writers are only valid for types with a static dtype");
+        static_assert(has_static_h5dtype_v<T>, "Writers are only valid for types with a static dtype");
 
     public:
         /**
@@ -48,7 +48,7 @@ namespace H5Composites
             for (Iterator itr = begin; itr != end; ++itr)
                 write(*itr);
         }
-    }
+    };
 }
 
 #endif //> !H5COMPOSITES_TYPEDWRITER_H
