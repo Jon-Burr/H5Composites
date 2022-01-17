@@ -45,16 +45,6 @@ namespace H5Composites
 
         std::unique_ptr<Base> create(TypeRegister::id_t id, const H5Buffer &buffer) const;
 
-        template <typename T>
-        class Registree : virtual public TypeRegister::Registree<T>
-        {
-        private:
-            static const inline bool registered = instance().template registerFactory<T>();
-
-        protected:
-            Registree() { (void)registered; }
-        };
-
     private:
         GenericFactory() = default;
         std::map<TypeRegister::id_t, factory_t> m_factories;

@@ -108,21 +108,6 @@ namespace H5Composites
             RegistreeBase() = default;
         };
 
-        template <typename T>
-        class Registree : virtual public RegistreeBase
-        {
-        public:
-            static inline const id_t typeID = instance().registerType(T::registeredName());
-            id_t getTypeID() const override { return T::typeID; }
-
-        protected:
-            Registree()
-            {
-                // Force ODR-use of type to ensure registration
-                (void)typeID;
-            }
-        };
-
     private:
         TypeRegister() = default;
         H5COMPOSITES_IDTYPE m_currentID{1};

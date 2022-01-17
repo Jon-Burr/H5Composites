@@ -29,22 +29,6 @@ namespace H5Composites
         static void setMergeRule(const H5::DataSet &dataSet, const H5::EnumType &dtype, const std::string &name);
         static TypeRegister::id_t getMergeRuleID(const H5::DataSet &dataSet);
 
-        template <typename T>
-        class Registree : public virtual TypeRegister::Registree<T>
-        {
-        private:
-            static const inline bool mergeRegistered = instance().registerRule(
-                T::typeID,
-                T::mergeBuffers);
-
-        protected:
-            Registree()
-            {
-                // Force ODR-use
-                (void)mergeRegistered;
-            }
-        };
-
     private:
         MergeFactory() = default;
 
