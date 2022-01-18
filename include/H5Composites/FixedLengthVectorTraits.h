@@ -56,21 +56,36 @@ namespace H5Composites
     {
         static std::vector<UnderlyingType_t<T>, Allocator> read(const void *buffer, const H5::DataType &dtype)
         {
-            if constexpr (has_static_h5dtype_v<T> && std::is_trivial_v<T>)
+            if constexpr (has_static_h5dtype_v<T>)
             {
                 H5::ArrayType arrType = dtype.getId();
                 std::vector<hsize_t> dims = getArrayDims(arrType);
                 if (dims.size() != 1)
                     throw std::invalid_argument("Unexpected number of array dimensions!");
+                std::size_t nElems = dims[0];
                 H5Buffer tmp;
-                if (arrType.getSuper() != getH5DType<T>())
+                H5::DataType targetSuper = getH5DType<T>();
+                if (arrType.getSuper() != targetSuper)
                 {
                     // Need to convert
-                    tmp = convert(buffer, dtype, H5::ArrayType(getH5DType<T>(), 1, dims.data()));
+                    tmp = convert(buffer, dtype, H5::ArrayType(targetSuper, 1, dims.data()));
                     buffer = tmp.get();
                 }
-                const UnderlyingType_t<T> *start = reinterpret_cast<const UnderlyingType_t<T> *>(buffer);
-                return std::vector<UnderlyingType_t<T>, Allocator>(start, start + dims.at(0));
+                if constexpr (std::is_trivial_v<UnderlyingType_t<T>>)
+                {
+                    const UnderlyingType_t<T> *start = reinterpret_cast<const UnderlyingType_t<T> *>(buffer);
+                    return std::vector<UnderlyingType_t<T>, Allocator>(start, start + nElems);
+                }
+                else
+                {
+                    std::vector<UnderlyingType_t<T>, Allocator> vec;
+                    vec.reserve(nElems);
+                    const std::byte *byteBuffer = static_cast<const std::byte *>(buffer);
+                    for (std::size_t idx = 0; idx < nElems; ++idx)
+                        vec.push_back(fromBuffer<UnderlyingType_t<T>>(
+                            byteBuffer + idx * targetSuper.getSize(), targetSuper));
+                    return vec;
+                }
             }
             else
             {
@@ -89,20 +104,37 @@ namespace H5Composites
         static void write(const std::vector<UnderlyingType_t<T>> &value, void *buffer, const H5::DataType &dtype)
         {
             H5::DataType sourceDType = getH5DType<FLVector<T, Allocator>>(value);
-            if constexpr (has_static_h5dtype_v<T> && std::is_trivial_v<T>)
+            if constexpr (has_static_h5dtype_v<T>)
             {
-                // Check the data type
-                if (sourceDType == dtype)
+                if constexpr (std::is_trivial_v<UnderlyingType_t<T>>)
                 {
-                    std::memcpy(buffer, value.data(), sourceDType.getSize());
+                    // Check the data type
+                    if (sourceDType == dtype)
+                    {
+                        std::memcpy(buffer, value.data(), sourceDType.getSize());
+                    }
+                    else
+                    {
+                        // have to convert the vector's storage
+                        H5Buffer converted = convert(value.data(), sourceDType, dtype);
+                        // Now copy this
+                        std::memcpy(buffer, converted.get(), dtype.getSize());
+                        converted.transferVLenOwnership().release();
+                    }
                 }
                 else
                 {
-                    // have to convert the vector's storage
-                    H5Buffer converted = convert(value.data(), sourceDType, dtype);
-                    // Now copy this
-                    std::memcpy(buffer, converted.get(), dtype.getSize());
-                    converted.transferVLenOwnership().release();
+                    std::byte *byteBuffer = static_cast<std::byte *>(buffer);
+                    H5::ArrayType arrType = dtype.getId();
+                    H5::DataType targetSuper = arrType.getSuper();
+                    std::vector<hsize_t> dims = getArrayDims(arrType);
+                    if (dims.size() != 1)
+                        throw std::invalid_argument("Unexpected number of array dimensions!");
+                    if (dims[0] != value.size())
+                        throw std::invalid_argument("Target data type has the wrong number of elements");
+                    for (std::size_t idx = 0; idx < value.size(); ++idx)
+                        BufferWriteTraits<T>::write(
+                            value[idx], byteBuffer + idx * targetSuper.getSize(), targetSuper);
                 }
             }
             else
