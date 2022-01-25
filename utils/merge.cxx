@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
     std::vector<std::string> inputFiles;
     std::vector<std::string> dynamicLibraries;
     std::size_t bufferSizeMB = 10;
-
+    H5Composites::FileMerger::MergeSettings mergeSettings;
 
     po::options_description desc("Allowed options");
     desc.add_options()
@@ -34,6 +34,8 @@ int main(int argc, char *argv[])
      "Overwrite the output file if it already exists. Cannot be set with 'in-place'")
     ("dynamic-link,l", po::value(&dynamicLibraries),
     "Extra libraries to link at run time (for the static factories)")
+    ("onlyScalars,s", po::value(&mergeSettings.onlyScalars), "Only output scalars")
+    ("onlyDataSets,d", po::value(&mergeSettings.onlyDataSets), "Only output data sets")
     ("help,h", "Print this message and exit.");
 
     po::options_description hidden;
@@ -97,5 +99,5 @@ int main(int argc, char *argv[])
     H5Composites::FileMerger merger(outputFile, inputFiles, bufferSize);
     // Perform the merging
     std::cout << "Merge" << std::endl;
-    merger.merge();
+    merger.merge(mergeSettings);
 }

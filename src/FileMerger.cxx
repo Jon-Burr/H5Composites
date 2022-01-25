@@ -1,15 +1,18 @@
 #include "H5Composites/FileMerger.h"
 #include "H5Composites/DTypeUtils.h"
 #include "H5Composites/DataSetUtils.h"
+#include "H5Composites/GroupWrapper.h"
 #include "H5Composites/MergeFactory.h"
 #include "H5Composites/MergeUtils.h"
 
 #include <map>
 #include <stdexcept>
 #include <optional>
+#include <algorithm>
 
 namespace H5Composites
 {
+
     FileMerger::FileMerger(
         const std::string &name,
         const std::vector<std::string> &inNames,
@@ -24,14 +27,15 @@ namespace H5Composites
             m_inputFiles.push_back(H5::H5File(name, H5F_ACC_RDONLY).openGroup("/"));
     }
 
-    void FileMerger::merge()
+    void FileMerger::merge(const MergeSettings &settings)
     {
-        mergeGroups(m_output, m_inputFiles);
+        mergeGroups(m_output, m_inputFiles, settings);
     }
 
     void FileMerger::mergeGroups(
         H5::Group &outputGroup,
-        const std::vector<H5::Group> &inputGroups)
+        const std::vector<H5::Group> &inputGroups,
+        const MergeSettings &settings)
     {
         // Collect the objects in the files
         std::map<std::string, std::pair<std::optional<H5G_obj_t>, std::vector<std::size_t>>> foundObjects;
@@ -75,6 +79,8 @@ namespace H5Composites
             // Remove this node from consideration in the next loop
             foundObjects.erase(name);
         }
+        if (GroupWrapper::hasTypeEnum(outputGroup))
+            m_typeEnum = GroupWrapper::getTypeEnum(outputGroup);
         for (const auto &p1 : foundObjects)
         {
             switch (*p1.second.first)
@@ -86,7 +92,7 @@ namespace H5Composites
                 for (std::size_t ii : p1.second.second)
                     groups.push_back(inputGroups.at(ii).openGroup(p1.first));
                 H5::Group newGroup = outputGroup.createGroup(p1.first);
-                mergeGroups(newGroup, groups);
+                mergeGroups(newGroup, groups, settings);
                 break;
             }
             case H5G_DATASET:
@@ -102,9 +108,9 @@ namespace H5Composites
                     dsets.push_back(inputGroups.at(ii).openDataSet(p1.first));
                 }
                 if (*isScalar)
-                    mergeScalars(outputGroup, p1.first, dsets);
+                    mergeScalars(outputGroup, p1.first, dsets, settings);
                 else
-                    mergeDataSets(outputGroup, p1.first, dsets);
+                    mergeDataSets(outputGroup, p1.first, dsets, settings);
                 break;
             }
             default:
@@ -117,8 +123,11 @@ namespace H5Composites
     void FileMerger::mergeScalars(
         H5::Group &outputGroup,
         const std::string &name,
-        const std::vector<H5::DataSet> &inputDataSets)
+        const std::vector<H5::DataSet> &inputDataSets,
+        const MergeSettings &settings)
     {
+        if (settings.onlyDataSets)
+            return;
         // Figure out the correct merge rule
         std::optional<TypeRegister::id_t> mergeRule;
         for (const H5::DataSet &ds : inputDataSets)
@@ -136,13 +145,18 @@ namespace H5Composites
         // Get the merged buffer
         H5Buffer buffer = MergeFactory::instance().merge(*mergeRule, buffers);
         outputGroup.createDataSet(name, buffer.dtype(), H5S_SCALAR).write(buffer.get(), buffer.dtype());
+        H5::DataSet ds = outputGroup.openDataSet(name);
+        MergeFactory::setMergeRule(ds, m_typeEnum, *mergeRule);
     }
 
     void FileMerger::mergeDataSets(
         H5::Group &outputGroup,
         const std::string &name,
-        const std::vector<H5::DataSet> &inputDataSets)
+        const std::vector<H5::DataSet> &inputDataSets,
+        const MergeSettings &settings)
     {
+        if (settings.onlyScalars)
+            return;
         H5Composites::mergeDataSets(outputGroup, name, inputDataSets, m_bufferSize, m_mergeAxis);
     }
 

@@ -16,7 +16,6 @@ namespace H5Composites
     H5::DataType H5DType<std::string>::getType()
     {
         return H5::StrType(H5::PredType::C_S1, H5T_VARIABLE);
-        //return H5::VarLenType(&H5::PredType::NATIVE_CHAR);
     }
 
     std::string BufferReadTraits<std::string>::read(const void *buffer, const H5::DataType &dtype)
