@@ -382,14 +382,14 @@ namespace H5Composites
 
     H5::StrType getCommonStrDType(const std::vector<H5::StrType> &dtypes)
     {
-        // Get a common base type
-        std::vector<H5::DataType> superTypes = getSuperTypes(dtypes.begin(), dtypes.end());
-        // String super types have to be native
-        H5::PredType commonBase = getCommonNumericDType(superTypes);
         std::size_t size = 0;
         for (const H5::StrType &dtype : dtypes)
+        {
+            if (dtype.isVariableStr())
+                return H5::StrType(H5::PredType::C_S1, H5T_VARIABLE);
             size = std::max(size, dtype.getPrecision());
-        return H5::StrType(commonBase, size);
+        }
+        return H5::StrType(H5::PredType::C_S1, size);
     }
 
     H5::ArrayType getCommonArrayDType(const std::vector<H5::ArrayType> &dtypes)
