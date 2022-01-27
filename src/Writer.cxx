@@ -1,4 +1,6 @@
 #include "H5Composites/Writer.h"
+#include "H5Composites/FixedLengthStringTraits.h"
+#include "H5Composites/FixedLengthVectorTraits.h"
 
 #include <cstring>
 
@@ -93,4 +95,20 @@ namespace H5Composites
     {
         writeFromBuffer(buffer.dtype(), buffer.get());
     }
+
+    void Writer::setIndex(const std::string &name)
+    {
+        setAttribute("index", toBuffer<FLString>(name));
+    }
+
+    void Writer::setIndex(const std::vector<std::string> &name)
+    {
+        setAttribute("index", toBuffer<FLVector<FLString>>(name));
+    }
+
+    void Writer::setAttribute(const std::string &name, const H5Buffer &value)
+    {
+        m_dataset.createAttribute(name, value.dtype(), H5S_SCALAR).write(value.dtype(), value.get());
+    }
+
 } // namespace H5Composites

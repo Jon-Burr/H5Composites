@@ -16,6 +16,9 @@
 #include "H5Composites/SmartBuffer.h"
 #include "H5Composites/H5Buffer.h"
 
+#include <string>
+#include <vector>
+
 namespace H5Composites
 {
     class Writer
@@ -90,6 +93,14 @@ namespace H5Composites
         /// Write a range of objects to the buffer
         template <typename Iterator>
         void write(Iterator begin, Iterator end);
+
+        /// Set a single column to be the index
+        void setIndex(const std::string &index);
+
+        /// Set multiple columns to be the index
+        void setIndex(const std::vector<std::string> &index);
+
+        void setAttribute(const std::string &name, const H5Buffer &value);
 
     private:
         /// The data type
