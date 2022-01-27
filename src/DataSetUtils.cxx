@@ -2,10 +2,10 @@
 #include "H5Composites/DTypeUtils.h"
 #include "H5Composites/SmartBuffer.h"
 #include "H5Composites/MergeUtils.h"
+#include "H5Composites/DTypePrinter.h"
 
 #include <optional>
 #include <stdexcept>
-
 
 namespace H5Composites
 {
@@ -65,7 +65,8 @@ namespace H5Composites
         // Figure out the size needed to allocate the buffer
         hsize_t nDims = target.getSpace().getSimpleExtentNdims();
         std::vector<hsize_t> dims(nDims, 0);
-        target.getSpace().getSimpleExtentDims(dims.data());
+        std::vector<hsize_t> maxDims(nDims, 0);
+        target.getSpace().getSimpleExtentDims(dims.data(), maxDims.data());
         std::size_t nElementsPerRow = 1;
         for (hsize_t idx = 0; idx < nDims; ++idx)
             if (idx != mergeAxis)
@@ -93,7 +94,7 @@ namespace H5Composites
             H5::DataSpace memorySpace(sourceSize.size(), sourceSize.data());
             memorySpace.selectAll();
             source.read(buffer.get(), target.getDataType(), memorySpace);
-            target.write(buffer.get(), target.getDataType(), memorySpace);
+            target.write(buffer.get(), target.getDataType(), memorySpace, targetSpace);
             // Now increment the offsets
             sourceOffset[mergeAxis] += nRowsToWrite;
             targetOffset[mergeAxis] += nRowsToWrite;
