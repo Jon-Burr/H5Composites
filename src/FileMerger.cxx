@@ -10,6 +10,28 @@
 #include <optional>
 #include <algorithm>
 
+namespace {
+    using namespace H5Composites;
+    void mergeAttributes(const H5::DataSet &out, const std::vector<H5::DataSet> &inputs)
+    {
+        std::map<std::string, H5Buffer> attributes;
+        for (const H5::DataSet &ds : inputs)
+            for (int idx = 0; idx < ds.getNumAttrs(); ++idx)
+            {
+                H5::Attribute attr = ds.openAttribute(idx);
+                H5Buffer buffer(attr.getDataType());
+                attr.read(buffer.dtype(), buffer.get());
+                auto itr = attributes.find(attr.getName());
+                if (itr == attributes.end())
+                    attributes[attr.getName()] = std::move(buffer);
+                else if (std::memcmp(itr->second.get(), buffer.get(), buffer.size()) != 0)
+                    throw std::invalid_argument("Mismatch in values for attribute " + attr.getName());
+            }
+        for (const auto &attrPair : attributes)
+            out.createAttribute(attrPair.first, attrPair.second.dtype(), H5S_SCALAR).write(attrPair.second.dtype(), attrPair.second.get());
+    }
+}
+
 namespace H5Composites
 {
 
@@ -146,7 +168,7 @@ namespace H5Composites
         H5Buffer buffer = MergeFactory::instance().merge(*mergeRule, buffers);
         outputGroup.createDataSet(name, buffer.dtype(), H5S_SCALAR).write(buffer.get(), buffer.dtype());
         H5::DataSet ds = outputGroup.openDataSet(name);
-        MergeFactory::setMergeRule(ds, m_typeEnum, *mergeRule);
+        mergeAttributes(ds, inputDataSets);
     }
 
     void FileMerger::mergeDataSets(
@@ -158,6 +180,7 @@ namespace H5Composites
         if (settings.onlyScalars)
             return;
         H5Composites::mergeDataSets(outputGroup, name, inputDataSets, m_bufferSize, m_mergeAxis);
+        mergeAttributes(outputGroup.openDataSet(name), inputDataSets);
     }
 
     void FileMerger::mergeDataTypes(
