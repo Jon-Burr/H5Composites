@@ -22,18 +22,24 @@ namespace H5Composites {
     struct FLString {};
 
     template <>
+    struct UnderlyingType<FLString>
+    {
+        using type = std::string;
+    };
+
+    template <>
     struct H5DType<FLString> {
         static H5::DataType getType(const std::string &value);
     };
 
     template <>
-    struct BufferReadTraits<std::string>
+    struct BufferReadTraits<FLString>
     {
         static std::string read(const void *buffer, const H5::DataType &dtype);
     };
 
     template <>
-    struct BufferWriteTraits<std::string>
+    struct BufferWriteTraits<FLString>
     {
         static void write(const std::string &value, void *buffer, const H5::DataType &dtype);
     };
