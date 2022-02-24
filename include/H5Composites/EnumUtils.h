@@ -103,7 +103,7 @@ namespace H5Composites
     {                                                        \
         static H5::DataType getType()                        \
         {                                                    \
-            H5COMPOSITES_ENUM_DTYPE(dtype, ENUM, MEMBERS...) \
+            H5COMPOSITES_ENUM_DTYPE(dtype, ENUM, MEMBERS)    \
             return dtype;                                    \
         }                                                    \
     }
