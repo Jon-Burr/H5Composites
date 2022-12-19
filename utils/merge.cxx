@@ -74,10 +74,6 @@ int main(int argc, char *argv[])
         std::cerr << "You must specify at least 1 input file!" << std::endl;
         return 1;
     }
-    if (vm.count("bufferSizeMB") && vm.count("bufferSizeRows") ) {
-        std::cerr << "You cannot specify both bufferSizeMB and bufferSizeRows!" << std::endl;
-        return 1;
-    }
 
     for (const std::string &lib : dynamicLibraries)
     {
@@ -96,7 +92,7 @@ int main(int argc, char *argv[])
     std::size_t bufferSize = bufferSizeMB * 1024*1024;
     // Create the merger
     std::cout << "Create merger" << std::endl;
-    H5Composites::FileMerger merger(outputFile, inputFiles, bufferSize);
+    H5Composites::FileMerger merger(outputFile, inputFiles, bufferSize, 0, true);
     // Perform the merging
     std::cout << "Merge" << std::endl;
     merger.merge(mergeSettings);

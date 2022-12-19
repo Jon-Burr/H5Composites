@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <optional>
 #include <algorithm>
+#include <iostream>
 
 namespace {
     using namespace H5Composites;
@@ -39,10 +40,12 @@ namespace H5Composites
         const std::string &name,
         const std::vector<std::string> &inNames,
         std::size_t bufferSize,
-        std::size_t mergeAxis)
+        std::size_t mergeAxis,
+        bool verbose)
         : m_output(H5::H5File(name, H5F_ACC_TRUNC).openGroup("/")),
           m_bufferSize(bufferSize),
-          m_mergeAxis(mergeAxis)
+          m_mergeAxis(mergeAxis),
+          m_verbose(verbose)
     {
         m_inputFiles.reserve(inNames.size());
         for (const std::string &name : inNames)
@@ -92,6 +95,7 @@ namespace H5Composites
         }
         for (const std::string &name : dataTypes)
         {
+            std::cout << "Merge data type " << name << std::endl;
             const auto &found = foundObjects.at(name);
             std::vector<H5::DataType> dtypes;
             dtypes.reserve(found.second.size());
@@ -105,6 +109,7 @@ namespace H5Composites
             m_typeEnum = GroupWrapper::getTypeEnum(outputGroup);
         for (const auto &p1 : foundObjects)
         {
+            std::cout << "Merging " << p1.first << std::endl;
             switch (*p1.second.first)
             {
             case H5G_GROUP:
