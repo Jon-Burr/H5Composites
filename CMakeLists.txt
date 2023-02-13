@@ -5,10 +5,8 @@ find_package(HDF5 COMPONENTS CXX REQUIRED)
 find_package(Boost 1.66 COMPONENTS unit_test_framework REQUIRED)
 
 add_library(H5Composites
-    src/Composite.cxx
     src/CompTypeUtils.cxx
     src/convert.cxx
-    src/DataBuffer.cxx
     src/DTypes.cxx
     src/DTypePrinter.cxx
     src/DTypeIterator.cxx

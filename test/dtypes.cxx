@@ -2,7 +2,6 @@
 
 #include <boost/test/included/unit_test.hpp>
 #include "H5Composites/DTypes.h"
-#include "H5Composites/DataBuffer.h"
 #include "H5Composites/RWTraits.h"
 #include "H5Cpp.h"
 #include <array>
@@ -14,7 +13,6 @@ BOOST_AUTO_TEST_CASE(primitive_types)
 {
     using namespace H5Composites;
     BOOST_TEST(getH5DType<int>() == H5::PredType::NATIVE_INT);
-    std::cout << std::is_standard_layout<DataBuffer>::value << std::endl;
 }
 
 BOOST_AUTO_TEST_CASE(array_type)
