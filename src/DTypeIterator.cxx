@@ -187,7 +187,7 @@ namespace H5Composites {
         auto itr = names.begin();
         result += *itr++;
         for (; itr != names.end(); ++itr)
-            result += "." + *itr;
+            result += substr + *itr;
         return result;
     }
 

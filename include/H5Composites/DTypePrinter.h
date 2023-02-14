@@ -1,3 +1,8 @@
+/**
+ * @file DTypePrinter.h
+ * @brief Helper class to print an H5 data type
+ */
+
 #ifndef H5COMPOSITES_DTYPEPRINTER_H
 #define H5COMPOSITES_DTYPEPRINTER_H
 
@@ -16,17 +21,7 @@ namespace H5Composites {
             std::size_t indent=0);
 
         void print(const H5::DataType& dtype);
-    
-#if 0
-        template <typename T>
-        bool operator()(const ItemInfo<T>& info);
 
-        bool operator()(const ItemInfo<array_dtype>& info);
-
-        bool operator()(const ItemInfo<comp_dtype_open>& info);
-
-        bool operator()(const ItemInfo<comp_dtype_close>& info);
-#endif
 
     private:
         bool m_printOffset;
