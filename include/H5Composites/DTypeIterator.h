@@ -18,18 +18,23 @@ namespace H5Composites {
      * Each step through the iteration will hold the current data type, its name in its parent
      * compound data type (if any) and its offset. For example iterating through the the native int
      * type would give
+     * @code
      * 0: H5::PredType::NATIVE_INT,  "", 0  //> ElemType::Integer
      * 1: END                               //> ElemType::End
+     * @endcode
      *
      * Note that accessing name or offset of the end iterator would give an exception.
      *
      * If you instead looked at composite type consisting of a float (MyFloat), and an int (MyInt)
      * the iteration would look more like (assuming 4 byte native floats and ints)
+     *
+     * @code
      * 0: H5::CompType, "", 0                       //> ElemType::Compound
      * 1: H5::PredType::NATIVE_FLOAT, "MyFloat", 0  //> ElemType::Float
      * 2: H5::PredType::NATIVE_INT, "MyInt", 4      //> ElemType::Integer
      * 3: H5::CompType, "", 8                       //> ElemType::CompoundClose
      * 4: END                                       //> ElemType::End
+     * @endcode
      */
     class DTypeIterator {
     public:
