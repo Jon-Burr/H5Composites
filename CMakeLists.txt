@@ -22,7 +22,6 @@ PRIVATE
     src/IBufferWriter.cxx
     src/MergeFactory.cxx
     src/MergeUtils.cxx
-    src/PrintBuffer.cxx
     src/SmartBuffer.cxx
     src/StringTraits.cxx
     src/TypeRegister.cxx

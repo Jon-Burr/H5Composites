@@ -14,7 +14,6 @@
 #include "H5Composites/FixedLengthVectorTraits.h"
 #include "H5Composites/H5Struct.h"
 #include "H5Composites/MergeUtils.h"
-#include "H5Composites/PrintBuffer.h"
 #include "H5Composites/StringTraits.h"
 #include "H5Composites/VectorTraits.h"
 #include "H5Cpp.h"
@@ -94,12 +93,15 @@ int main() {
               << bs2 << std::endl
               << "=" << std::endl
               << fromBuffer<std::bitset<8>>(b3) << std::endl;
+    std::cout << (bs1 | bs2) << std::endl;
     b3 = MergeFactory::instance().merge(BitAnd::typeID, buffers);
     std::cout << bs1 << std::endl
               << "&" << std::endl
               << bs2 << std::endl
               << "=" << std::endl
               << fromBuffer<std::bitset<8>>(b3) << std::endl;
+    std::cout << (bs1 & bs2) << std::endl;
+
 
     std::bitset<2> bsTest(2);
     std::cout << bsTest << " -> ";
