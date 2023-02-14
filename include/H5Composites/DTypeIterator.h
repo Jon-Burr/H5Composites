@@ -3,31 +3,54 @@
 
 #include "H5Cpp.h"
 #include "hdf5.h"
+#include <queue>
 #include <tuple>
 #include <vector>
-#include <queue>
 
-namespace H5Composites
-{
-    class DTypeIterator
-    {
+namespace H5Composites {
+    /**
+     * @brief Helper class that iterates through H5::DataTypes
+     *
+     * A simple data type is one step in the iterator. When it encounters a compound data type first
+     * a 'Compound' element will be encountered, then all of the members of that data type and
+     * finally a 'CompoundEnd' element.
+     *
+     * Each step through the iteration will hold the current data type, its name in its parent
+     * compound data type (if any) and its offset. For example iterating through the the native int
+     * type would give
+     * 0: H5::PredType::NATIVE_INT,  "", 0  //> ElemType::Integer
+     * 1: END                               //> ElemType::End
+     *
+     * Note that accessing name or offset of the end iterator would give an exception.
+     *
+     * If you instead looked at composite type consisting of a float (MyFloat), and an int (MyInt)
+     * the iteration would look more like (assuming 4 byte native floats and ints)
+     * 0: H5::CompType, "", 0                       //> ElemType::Compound
+     * 1: H5::PredType::NATIVE_FLOAT, "MyFloat", 0  //> ElemType::Float
+     * 2: H5::PredType::NATIVE_INT, "MyInt", 4      //> ElemType::Integer
+     * 3: H5::CompType, "", 8                       //> ElemType::CompoundClose
+     * 4: END                                       //> ElemType::End
+     */
+    class DTypeIterator {
     public:
-        enum class ElemType
-        {
-            Boolean,
-            Integer,
-            Float,
-            Bitfield,
-            String,
-            Enum,
-            Array,
-            Variable,
-            Compound,
-            CompoundClose,
-            End
+        /// The type of DataType being looked at
+        enum class ElemType {
+            Boolean,       ///< The native boolean datatype
+            Integer,       ///< An integer data type
+            Float,         ///< A floating point data type
+            Bitfield,      ///< A bitset
+            String,        ///< A string
+            Enum,          ///< An enum
+            Array,         ///< Array types
+            Variable,      ///< Variable-length data types
+            Compound,      ///< The start of a compound data type
+            CompoundClose, ///< The end of a compound data type
+            End            ///< Past the end iterator
         };
 
+        /// @brief Get the element type from a data type
         static ElemType getElemType(const H5::DataType &dtype);
+        /// @brief Convert an element type to a string representation (for printing)
         static std::string to_string(ElemType elemType);
 
         using value_type = H5::DataType;
@@ -39,6 +62,7 @@ namespace H5Composites
         DTypeIterator() : m_elemType(ElemType::End) {}
         DTypeIterator(const H5::DataType &dtype);
 
+        /// @brief Dereferencing accesses the data type of the current location
         reference_type operator*() const { return std::get<0>(m_queues.back().front()); }
         pointer_type operator->() const { return &operator*(); }
 
@@ -48,7 +72,8 @@ namespace H5Composites
         friend bool operator==(const DTypeIterator &lhs, const DTypeIterator &rhs);
         friend bool operator!=(const DTypeIterator &lhs, const DTypeIterator &rhs);
 
-        /// Skip this iterator to the next compound close element or the end element if not inside a compound data type
+        /// Skip this iterator to the next compound close element or the end element if not inside a
+        /// compound data type
         DTypeIterator &skipToCompoundClose();
 
         /// The type of the current element
@@ -88,7 +113,7 @@ namespace H5Composites
 
         /**
          * @brief Get the corresponding numeric type
-         * 
+         *
          * Note that this uses the underlying H5Tget_native_type function and is allowed to perform
          * conversions.
          */
@@ -96,7 +121,7 @@ namespace H5Composites
 
         /**
          * @brief Get the corresponding predefined type
-         * 
+         *
          * Note that this uses the underlying H5Tget_native_type function and is allowed to perform
          * conversions.
          */
@@ -104,7 +129,7 @@ namespace H5Composites
 
         /**
          * @brief Get the corresponding bitfield type
-         * 
+         *
          * Note that this will return one of the 4 native bitset types and can perform conversions
          */
         H5::PredType bitfieldDType() const;
@@ -129,6 +154,6 @@ namespace H5Composites
         std::vector<std::queue<std::tuple<H5::DataType, std::string, std::size_t>>> m_queues;
 
     }; //> end class DTypeIterator
-}
+} // namespace H5Composites
 
 #endif //! H5COMPOSITES_DTYPEITERATOR_H
