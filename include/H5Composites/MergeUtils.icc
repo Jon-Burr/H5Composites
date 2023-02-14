@@ -133,10 +133,7 @@ namespace H5Composites
             template <typename> typename Condition>
         template <typename T>
         SmartBuffer ParallelMerger<Operator, Identity, Condition>::Functor<T>::operator()(
-            std::size_t n,
-            const std::vector<const void *> &buffers)
-        {
-            SmartBuffer outBuffer(sizeof(T) * n);
+            SmartBuffer outBuffer = SmartBuffer::copyValue(Identity<T>::identity(), n);
             T *out = static_cast<T *>(outBuffer.get());
             Operator<T> op;
             for (const void *inBuffer : buffers)

@@ -93,6 +93,12 @@ namespace H5Composites {
     using BitAnd =
             detail::ParallelMerger<std::bit_and, detail::TrueIdentity, detail::supports_boolean>;
 
+    // Promise the compiler that we will provide these definitions
+    template <> const TypeRegister::id_t Plus::typeID;
+    template <> const TypeRegister::id_t Multiplies::typeID;
+    template <> const TypeRegister::id_t BitAnd::typeID;
+    template <> const TypeRegister::id_t BitOr::typeID;
+
     template <typename T> bool enforceEqual(std::optional<T> &currentValue, const T &newValue) {
         if (currentValue.has_value()) {
             if (*currentValue != newValue)

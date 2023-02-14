@@ -13,6 +13,8 @@
 #define H5COMPOSITES_SMARTBUFFER_H
 
 #include <cstddef>
+#include <cstring>
+#include <utility>
 
 namespace H5Composites {
     /**
@@ -42,7 +44,15 @@ namespace H5Composites {
         /// Destroy the buffer, freeing its memory
         ~SmartBuffer();
 
-        operator bool() const;
+        /// Create a smart buffer by copying a value
+        template <typename T> static SmartBuffer copyValue(const T &value, std::size_t n = 1) {
+            SmartBuffer buffer(sizeof(T) * n);
+            for (std::size_t idx = 0; idx < n; ++idx)
+                std::memcpy(buffer.get(idx * sizeof(T)), &value, sizeof(T));
+            return std::move(buffer);
+        }
+
+        explicit operator bool() const;
 
         /// Set a new managed object
         void reset(void *buffer);
