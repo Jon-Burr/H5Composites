@@ -38,6 +38,7 @@ template <std::size_t N> std::array<std::byte, N> toBytes(const std::array<uint8
 }
 
 struct RWTestBase {
+    virtual ~RWTestBase() = default;
     virtual void write_test() const = 0;
     virtual void read_test() const = 0;
 };

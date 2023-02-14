@@ -54,7 +54,7 @@ namespace H5Composites {
         H5Buffer &operator=(H5Buffer &&other);
 
         /// Whether this owns any memory
-        operator bool() const;
+        explicit operator bool() const;
 
         /// The data type of this object. Note this is invalid if there is no held memory
         const H5::DataType &dtype() const;

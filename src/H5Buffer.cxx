@@ -36,7 +36,7 @@ namespace H5Composites {
         return *this;
     }
 
-    H5Buffer::operator bool() const { return m_buffer; }
+    H5Buffer::operator bool() const { return bool(m_buffer); }
 
     const H5::DataType &H5Buffer::dtype() const { return m_dtype; }
 

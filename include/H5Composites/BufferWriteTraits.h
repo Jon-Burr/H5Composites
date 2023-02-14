@@ -33,13 +33,13 @@ namespace H5Composites {
                 "classes");
 
         template <typename U = write_t>
-        static constexpr std::enable_if_t<std::is_base_of_v<IBufferWriter, U>, void> write(
+        static std::enable_if_t<std::is_base_of_v<IBufferWriter, U>, void> write(
                 const U &u, void *buffer, const H5::DataType &targetDType) {
             u.writeBufferWithType(buffer, targetDType);
         }
 
         template <typename U = write_t>
-        static constexpr std::enable_if_t<!std::is_base_of_v<IBufferWriter, U>, void> write(
+        static std::enable_if_t<!std::is_base_of_v<IBufferWriter, U>, void> write(
                 const U &u, void *buffer, const H5::DataType &targetDType) {
             const H5::DataType &sourceDType = getH5DType<T>(u);
             if (sourceDType == targetDType)
