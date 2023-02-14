@@ -4,9 +4,9 @@
  * @brief Provide RAII behaviour for memory buffers allocated with malloc and free
  * @version 0.0.0
  * @date 2021-12-09
- * 
+ *
  * @copyright Copyright (c) 2021
- * 
+ *
  */
 
 #ifndef H5COMPOSITES_SMARTBUFFER_H
@@ -14,13 +14,11 @@
 
 #include <cstddef>
 
-namespace H5Composites
-{
+namespace H5Composites {
     /**
      * @brief RAII behaviour for a memory buffer allocated with malloc and free
      */
-    class SmartBuffer
-    {
+    class SmartBuffer {
     public:
         /// Default constructor creates an empty pointer
         SmartBuffer();
@@ -31,7 +29,7 @@ namespace H5Composites
         SmartBuffer(std::size_t size, unsigned char fill);
         /**
          * @brief Take ownership of a void pointer
-         * 
+         *
          * If the void* was not allocated by std::malloc then this will lead to undefined behaviour!
          */
         SmartBuffer(void *buffer);
@@ -65,6 +63,6 @@ namespace H5Composites
     private:
         void *m_buffer;
     };
-}
+} // namespace H5Composites
 
 #endif //> !H5COMPOSITES_SMARTBUFFER_H

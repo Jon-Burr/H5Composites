@@ -1,10 +1,8 @@
 #include "H5Composites/CompDTypeUtils.h"
 
-namespace H5Composites
-{
+namespace H5Composites {
     H5::CompType createCompoundDType(
-        const std::vector<std::pair<H5::DataType, std::string>> &components)
-    {
+            const std::vector<std::pair<H5::DataType, std::string>> &components) {
         // First iterate through and get all of the data type sizes
         std::size_t totalSize = 0;
         for (const auto &p : components)
@@ -13,34 +11,27 @@ namespace H5Composites
         // Now go through and build the data type
         H5::CompType dtype(totalSize);
         std::size_t offset = 0;
-        for (const auto &p : components)
-        {
-            dtype.insertMember(
-                p.second,
-                offset,
-                p.first);
+        for (const auto &p : components) {
+            dtype.insertMember(p.second, offset, p.first);
             offset += p.first.getSize();
         }
         return dtype;
     }
 
-    void *getMemberPointer(void *buffer, const H5::CompType &dtype, std::size_t idx)
-    {
+    void *getMemberPointer(void *buffer, const H5::CompType &dtype, std::size_t idx) {
         return static_cast<std::byte *>(buffer) + dtype.getMemberOffset(idx);
     }
 
-    void *getMemberPointer(void *buffer, const H5::CompType &dtype, const std::string &name)
-    {
+    void *getMemberPointer(void *buffer, const H5::CompType &dtype, const std::string &name) {
         return getMemberPointer(buffer, dtype, dtype.getMemberIndex(name));
     }
 
-    const void *getMemberPointer(const void *buffer, const H5::CompType &dtype, std::size_t idx)
-    {
+    const void *getMemberPointer(const void *buffer, const H5::CompType &dtype, std::size_t idx) {
         return static_cast<const std::byte *>(buffer) + dtype.getMemberOffset(idx);
     }
 
-    const void *getMemberPointer(const void *buffer, const H5::CompType &dtype, const std::string &name)
-    {
+    const void *getMemberPointer(
+            const void *buffer, const H5::CompType &dtype, const std::string &name) {
         return getMemberPointer(buffer, dtype, dtype.getMemberIndex(name));
     }
-}
+} // namespace H5Composites

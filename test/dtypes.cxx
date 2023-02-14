@@ -1,16 +1,15 @@
 #define BOOST_TEST_MODULE dtypes
 
-#include <boost/test/included/unit_test.hpp>
 #include "H5Composites/DTypes.h"
+#include <boost/test/included/unit_test.hpp>
 
-BOOST_TEST_DONT_PRINT_LOG_VALUE( H5::PredType )
-BOOST_TEST_DONT_PRINT_LOG_VALUE( H5::DataType )
+BOOST_TEST_DONT_PRINT_LOG_VALUE(H5::PredType)
+BOOST_TEST_DONT_PRINT_LOG_VALUE(H5::DataType)
 
-#define TEST_PREDTYPE(ctype, h5type)                                         \
+#define TEST_PREDTYPE(ctype, h5type)                                                               \
     BOOST_TEST(H5Composites::getH5DType<ctype>() == H5::PredType::h5type)
 
-BOOST_AUTO_TEST_CASE(primitive_types)
-{
+BOOST_AUTO_TEST_CASE(primitive_types) {
     TEST_PREDTYPE(int, NATIVE_INT);
     TEST_PREDTYPE(unsigned int, NATIVE_UINT);
     TEST_PREDTYPE(char, NATIVE_CHAR);

@@ -4,9 +4,9 @@
  * @brief Base class for items that can be written to H5 buffers
  * @version 0.0.0
  * @date 2021-12-09
- * 
+ *
  * @copyright Copyright (c) 2021
- * 
+ *
  */
 
 #ifndef H5COMPOSITES_IBUFFERWRITER_H
@@ -30,13 +30,13 @@ namespace H5Composites {
 
         /**
          * @brief Write to a buffer with the given buffer type
-         * 
+         *
          * @param buffer The buffer to write to
          * @param dtype The data type of the target space
          */
         virtual void writeBufferWithType(void *buffer, const H5::DataType &targetDType) const;
 
     }; //> end class IBufferWriter
-} //> end namespace H5Composites
+} // namespace H5Composites
 
 #endif //> !H5COMPOSITES_IBUFFERWRITER_H

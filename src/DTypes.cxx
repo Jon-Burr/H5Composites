@@ -1,18 +1,18 @@
 /**
  * @file DTypes.cxx
  * @author Jon Burr (jon.burr@cern.ch)
- * @brief 
+ * @brief
  * @version 0.0.0
  * @date 2021-12-09
- * 
+ *
  * @copyright Copyright (c) 2021
- * 
+ *
  */
 
 #include "H5Composites/DTypes.h"
 
-#define H5COMPOSITES_DEFINE_STATIC_H5DTYPE(type, pred)              \
-H5::DataType H5DType<type>::getType() { return H5::PredType::pred; }
+#define H5COMPOSITES_DEFINE_STATIC_H5DTYPE(type, pred)                                             \
+    H5::DataType H5DType<type>::getType() { return H5::PredType::pred; }
 
 namespace H5Composites {
     H5COMPOSITES_DEFINE_STATIC_H5DTYPE(int, NATIVE_INT)
@@ -29,4 +29,4 @@ namespace H5Composites {
     H5COMPOSITES_DEFINE_STATIC_H5DTYPE(float, NATIVE_FLOAT)
     H5COMPOSITES_DEFINE_STATIC_H5DTYPE(double, NATIVE_DOUBLE)
     H5COMPOSITES_DEFINE_STATIC_H5DTYPE(bool, NATIVE_HBOOL)
-}
+} // namespace H5Composites

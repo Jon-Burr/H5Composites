@@ -3,31 +3,26 @@
  * @author Jon Burr (jon.burr@cern.ch)
  * @version 0.0.0
  * @date 2021-12-09
- * 
+ *
  * @copyright Copyright (c) 2021
- * 
+ *
  */
 
 #include "H5Composites/IBufferWriter.h"
+#include "H5Composites/DTypeConverter.h"
 #include "H5Composites/DTypeUtils.h"
 #include "H5Composites/SmartBuffer.h"
-#include "H5Composites/DTypeConverter.h"
 #include <cstring>
 
-namespace H5Composites
-{
+namespace H5Composites {
     IBufferWriter::~IBufferWriter() {}
 
-    void IBufferWriter::writeBufferWithType(
-        void *buffer,
-        const H5::DataType &targetDType) const
-    {
+    void IBufferWriter::writeBufferWithType(void *buffer, const H5::DataType &targetDType) const {
         const H5::DataType &sourceDType = h5DType();
         if (targetDType == sourceDType)
             // just use the default version
             writeBuffer(buffer);
-        else
-        {
+        else {
             // Need to take care of the type conversion
             SmartBuffer tmp(sourceDType.getSize());
             writeBuffer(tmp.get());
@@ -40,4 +35,4 @@ namespace H5Composites
             converted.transferVLenOwnership().release();
         }
     }
-} //> end namespace H5Composites
+} // namespace H5Composites

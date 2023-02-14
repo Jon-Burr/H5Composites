@@ -4,41 +4,36 @@
  * @brief Class for writing one-dimensional extendable datasets
  * @version 0.0.0
  * @date 2022-01-06
- * 
+ *
  * @copyright Copyright (c) 2022
- * 
+ *
  */
 
 #ifndef H5COMPOSITES_WRITER_H
 #define H5COMPOSITES_WRITER_H
 
 #include "H5Composites/DTypes.h"
-#include "H5Composites/SmartBuffer.h"
 #include "H5Composites/H5Buffer.h"
+#include "H5Composites/SmartBuffer.h"
 
 #include <string>
 #include <vector>
 
-namespace H5Composites
-{
-    class Writer
-    {
+namespace H5Composites {
+    class Writer {
     public:
         /**
          * @brief Construct a new Writer object
-         * 
+         *
          * @param targetGroup The group to write to
          * @param name The name of the dataset to create
          * @param dtype The data type to use
          * @param cacheSize The number of objects to hold in memory before flushing to disk
-         * @param chunkSize The number of objects to store per dataset chunk (if -1 set to the cacheSize)
+         * @param chunkSize The number of objects to store per dataset chunk (if -1 set to the
+         * cacheSize)
          */
-        Writer(
-            H5::Group &targetGroup,
-            const std::string &name,
-            const H5::DataType &dtype,
-            std::size_t cacheSize = 2048,
-            std::size_t chunkSize = -1);
+        Writer(H5::Group &targetGroup, const std::string &name, const H5::DataType &dtype,
+               std::size_t cacheSize = 2048, std::size_t chunkSize = -1);
 
         /// Move constructor
         Writer(Writer &&other);
@@ -87,12 +82,10 @@ namespace H5Composites
         void writeFromBuffer(const H5Buffer &buffer);
 
         /// Write an object to the buffer
-        template <typename T>
-        void write(const UnderlyingType_t<T> &obj);
+        template <typename T> void write(const UnderlyingType_t<T> &obj);
 
         /// Write a range of objects to the buffer
-        template <typename Iterator>
-        void write(Iterator begin, Iterator end);
+        template <typename Iterator> void write(Iterator begin, Iterator end);
 
         /// Set a single column to be the index
         void setIndex(const std::string &index);
@@ -117,7 +110,7 @@ namespace H5Composites
         SmartBuffer m_buffer;
 
     }; //> end class Writer
-} //> end namespace H5Composites
+} // namespace H5Composites
 
 #include "H5Composites/Writer.icc"
 #endif //> !H5COMPOSITES_WRITER_H

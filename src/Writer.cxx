@@ -4,18 +4,11 @@
 
 #include <cstring>
 
-namespace H5Composites
-{
+namespace H5Composites {
     Writer::Writer(
-        H5::Group &targetGroup,
-        const std::string &name,
-        const H5::DataType &dtype,
-        std::size_t cacheSize,
-        std::size_t chunkSize)
-        : m_dtype(dtype),
-          m_cacheSize(cacheSize),
-          m_buffer(cacheSize * dtype.getSize())
-    {
+            H5::Group &targetGroup, const std::string &name, const H5::DataType &dtype,
+            std::size_t cacheSize, std::size_t chunkSize)
+            : m_dtype(dtype), m_cacheSize(cacheSize), m_buffer(cacheSize * dtype.getSize()) {
         if (targetGroup.nameExists(name))
             throw std::invalid_argument(name + " already exists in H5 group");
         hsize_t startDimension[1]{0};
@@ -26,14 +19,10 @@ namespace H5Composites
         hsize_t chunks[1]{static_cast<hsize_t>(chunkSize)};
         propList.setChunk(1, chunks);
         m_dataset = targetGroup.createDataSet(
-            name,
-            m_dtype,
-            H5::DataSpace(1, startDimension, maxDimension),
-            propList);
+                name, m_dtype, H5::DataSpace(1, startDimension, maxDimension), propList);
     }
 
-    Writer::Writer(Writer &&other)
-    {
+    Writer::Writer(Writer &&other) {
         m_dtype = std::move(other.m_dtype);
         m_cacheSize = other.m_cacheSize;
         m_dataset = std::move(other.m_dataset);
@@ -44,21 +33,16 @@ namespace H5Composites
         other.clear();
     }
 
-    Writer::~Writer()
-    {
-        flush();
-    }
+    Writer::~Writer() { flush(); }
 
-    void Writer::clear()
-    {
+    void Writer::clear() {
         // Setting the buffer position back to 0 effectively discards the data we already have.
         // This is all technically contained in the buffer but will now be ignored by flush calls
         // and overwritten by write calls
         m_nInBuffer = 0;
     }
 
-    void Writer::flush()
-    {
+    void Writer::flush() {
         // If the buffer is empty then do nothing
         if (m_nInBuffer == 0)
             return;
@@ -81,34 +65,30 @@ namespace H5Composites
         clear();
     }
 
-    void Writer::writeFromBuffer(const H5::DataType &dtype, const void *buffer)
-    {
+    void Writer::writeFromBuffer(const H5::DataType &dtype, const void *buffer) {
         std::memcpy(
-            m_buffer.get(m_nInBuffer * m_dtype.getSize()),
-            dtype == m_dtype ? buffer : convert(buffer, dtype, m_dtype).get(),
-            m_dtype.getSize());
+                m_buffer.get(m_nInBuffer * m_dtype.getSize()),
+                dtype == m_dtype ? buffer : convert(buffer, dtype, m_dtype).get(),
+                m_dtype.getSize());
         if (++m_nInBuffer == m_cacheSize)
             flush();
     }
 
-    void Writer::writeFromBuffer(const H5Buffer &buffer)
-    {
+    void Writer::writeFromBuffer(const H5Buffer &buffer) {
         writeFromBuffer(buffer.dtype(), buffer.get());
     }
 
-    void Writer::setIndex(const std::string &name)
-    {
+    void Writer::setIndex(const std::string &name) {
         setAttribute("index", toBuffer<FLString>(name));
     }
 
-    void Writer::setIndex(const std::vector<std::string> &name)
-    {
+    void Writer::setIndex(const std::vector<std::string> &name) {
         setAttribute("index", toBuffer<FLVector<FLString>>(name));
     }
 
-    void Writer::setAttribute(const std::string &name, const H5Buffer &value)
-    {
-        m_dataset.createAttribute(name, value.dtype(), H5S_SCALAR).write(value.dtype(), value.get());
+    void Writer::setAttribute(const std::string &name, const H5Buffer &value) {
+        m_dataset.createAttribute(name, value.dtype(), H5S_SCALAR)
+                .write(value.dtype(), value.get());
     }
 
 } // namespace H5Composites

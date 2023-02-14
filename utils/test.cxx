@@ -1,21 +1,18 @@
-#include <bitset>
 #include "H5Cpp.h"
-#include <sstream>
-#include <iomanip>
-#include <cstddef>
-#include <iostream>
-#include <vector>
 #include <array>
+#include <bitset>
+#include <cstddef>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
+#include <vector>
 
-namespace
-{
-    std::string bufferToString(const void *buffer, std::size_t size)
-    {
+namespace {
+    std::string bufferToString(const void *buffer, std::size_t size) {
         const std::byte *start = reinterpret_cast<const std::byte *>(buffer);
         std::ostringstream ss;
         ss << std::hex << std::uppercase;
-        for (std::size_t idx = 0; idx < size; ++idx)
-        {
+        for (std::size_t idx = 0; idx < size; ++idx) {
             ss << std::setfill('0') << std::setw(2) << std::to_integer<int>(*(start + idx));
             if (idx < size - 1)
                 // insert spaces between the bytes
@@ -23,10 +20,9 @@ namespace
         }
         return ss.str();
     }
-}
+} // namespace
 
-int main()
-{
+int main() {
     H5::H5File fp("test.h5", H5F_ACC_TRUNC);
     hsize_t startDimension[1]{5};
     hsize_t maxDimension[1]{H5S_UNLIMITED};
@@ -35,11 +31,9 @@ int main()
     H5::DSetCreatPropList propList;
     propList.setChunk(1, chunks);
     fp.createDataSet(
-          "dataset",
-          H5::PredType::NATIVE_FLOAT,
-          H5::DataSpace(1, startDimension, maxDimension),
-          propList)
-        .write(data.data(), H5::PredType::NATIVE_FLOAT, H5::DataSpace(1, startDimension));
+              "dataset", H5::PredType::NATIVE_FLOAT, H5::DataSpace(1, startDimension, maxDimension),
+              propList)
+            .write(data.data(), H5::PredType::NATIVE_FLOAT, H5::DataSpace(1, startDimension));
 
     fp.close();
     std::cout << "reopen file" << std::endl;

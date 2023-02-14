@@ -1,30 +1,22 @@
 #include "H5Composites/DTypePrinter.h"
-#include "H5Composites/DTypeIterator.h"
 #include "H5Composites/DTypeDispatch.h"
+#include "H5Composites/DTypeIterator.h"
 #include "H5Composites/DTypeUtils.h"
-#include <typeinfo>
-#include <iomanip>
-#include <sstream>
-#include <iostream>
 #include <bitset>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
+#include <typeinfo>
 
-namespace
-{
-    template <typename T>
-    std::string printType();
+namespace {
+    template <typename T> std::string printType();
 
-    template <typename T>
-    struct TypePrinter
-    {
+    template <typename T> struct TypePrinter {
         std::string operator()() { return printType<T>(); }
     };
 
-#define DEF_PRINT_TYPE(TYPE)      \
-    template <>                   \
-    std::string printType<TYPE>() \
-    {                             \
-        return #TYPE;             \
-    }
+#define DEF_PRINT_TYPE(TYPE)                                                                       \
+    template <> std::string printType<TYPE>() { return #TYPE; }
 
     DEF_PRINT_TYPE(char)
     DEF_PRINT_TYPE(short)
@@ -45,49 +37,34 @@ namespace
     DEF_PRINT_TYPE(std::bitset<16>)
     DEF_PRINT_TYPE(std::bitset<32>)
     DEF_PRINT_TYPE(std::bitset<64>)
-}
+} // namespace
 
-namespace H5Composites
-{
+namespace H5Composites {
     DTypePrinter::DTypePrinter(
-        bool printOffset,
-        std::size_t padOffset,
-        std::size_t indentSize,
-        bool compact,
-        std::ostream &stream,
-        std::size_t indent) : m_printOffset(printOffset),
-                              m_padOffset(padOffset),
-                              m_indentSize(indentSize),
-                              m_compact(compact),
-                              m_stream(stream),
-                              m_indent(indent)
-    {
-    }
+            bool printOffset, std::size_t padOffset, std::size_t indentSize, bool compact,
+            std::ostream &stream, std::size_t indent)
+            : m_printOffset(printOffset), m_padOffset(padOffset), m_indentSize(indentSize),
+              m_compact(compact), m_stream(stream), m_indent(indent) {}
 
-    void DTypePrinter::print(const H5::DataType &dtype)
-    {
+    void DTypePrinter::print(const H5::DataType &dtype) {
         m_first = true;
-        for (DTypeIterator itr(dtype); itr != DTypeIterator(); ++itr)
-        {
-            if (m_compact)
-            {
+        for (DTypeIterator itr(dtype); itr != DTypeIterator(); ++itr) {
+            if (m_compact) {
                 if (!m_first && itr.elemType() != DTypeIterator::ElemType::CompoundClose)
                     m_stream << ", ";
-            }
-            else
-            {
+            } else {
                 if (!m_first)
                     m_stream << std::endl;
                 m_stream << std::string(m_indentSize * m_indent, ' ');
                 if (m_printOffset)
-                    m_stream << std::setw(m_padOffset) << itr.currentOffset() << std::setw(0) << std::string(m_indentSize, ' ');
+                    m_stream << std::setw(m_padOffset) << itr.currentOffset() << std::setw(0)
+                             << std::string(m_indentSize, ' ');
                 m_stream << std::string(m_indentSize * itr.depth(), ' ');
             }
             if (itr.name() != "")
                 m_stream << itr.name() << ": ";
             m_first = false;
-            switch (itr.elemType())
-            {
+            switch (itr.elemType()) {
             case DTypeIterator::ElemType::Boolean:
             case DTypeIterator::ElemType::Integer:
             case DTypeIterator::ElemType::Float:
@@ -105,27 +82,24 @@ namespace H5Composites
                 m_stream << "enum";
                 break;
             case DTypeIterator::ElemType::Array:
-            case DTypeIterator::ElemType::Variable:
-            {
+            case DTypeIterator::ElemType::Variable: {
                 H5::DataType superType = itr->getSuper();
                 if (!m_compact && superType.getClass() != H5T_COMPOUND)
                     DTypePrinter(false, 0, 0, true, m_stream).print(superType);
                 else
-                    DTypePrinter(m_printOffset, m_padOffset, m_indent, m_compact, m_stream).print(superType);
+                    DTypePrinter(m_printOffset, m_padOffset, m_indent, m_compact, m_stream)
+                            .print(superType);
                 m_stream << "[";
-                if (itr.elemType() == DTypeIterator::ElemType::Array)
-                {
+                if (itr.elemType() == DTypeIterator::ElemType::Array) {
                     std::vector<hsize_t> dims = getArrayDims(itr.arrDType());
                     auto dItr = dims.begin();
                     for (; dItr != dims.end() - 1; ++dItr)
                         m_stream << *dItr << ", ";
                     m_stream << *dItr;
-                }
-                else
+                } else
                     m_stream << "*";
                 m_stream << "]";
-            }
-            break;
+            } break;
             case DTypeIterator::ElemType::Compound:
                 m_stream << "{";
                 if (m_compact)
@@ -141,18 +115,16 @@ namespace H5Composites
         }
     }
 
-    std::string to_string(const H5::DataType &dtype)
-    {
+    std::string to_string(const H5::DataType &dtype) {
         std::ostringstream os;
         DTypePrinter p(false, 0, 0, true, os);
         p.print(dtype);
         return os.str();
     }
 
-    std::ostream &operator<<(std::ostream &os, const H5::DataType &dtype)
-    {
+    std::ostream &operator<<(std::ostream &os, const H5::DataType &dtype) {
         DTypePrinter p(true, 4, 4, false, os);
         p.print(dtype);
         return os;
     }
-}
+} // namespace H5Composites

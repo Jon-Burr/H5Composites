@@ -1,21 +1,18 @@
 #include "H5Composites/DataSetUtils.h"
-#include "H5Composites/DTypeUtils.h"
-#include "H5Composites/SmartBuffer.h"
-#include "H5Composites/MergeUtils.h"
 #include "H5Composites/DTypePrinter.h"
+#include "H5Composites/DTypeUtils.h"
+#include "H5Composites/MergeUtils.h"
+#include "H5Composites/SmartBuffer.h"
 
 #include <optional>
 #include <stdexcept>
 
 #include <iostream>
 
-namespace H5Composites
-{
+namespace H5Composites {
 
     std::pair<hsize_t, std::vector<hsize_t>> getMergedDataSetExtent(
-        const std::vector<H5::DataSet> &datasets,
-        hsize_t defaultAxis)
-    {
+            const std::vector<H5::DataSet> &datasets, hsize_t defaultAxis) {
         if (datasets.size() == 0)
             throw std::invalid_argument("Cannot merge 0 datasets!");
         // First make sure that all the datasets have the same extent
@@ -34,8 +31,7 @@ namespace H5Composites
                 if (!enforceEqual(mergeAxis, idx))
                     throw std::invalid_argument("Could not find a single merge axis!");
         // Now go through the remaining datasets and make sure that these match this
-        for (++itr; itr != datasets.end(); ++itr)
-        {
+        for (++itr; itr != datasets.end(); ++itr) {
             std::vector<hsize_t> thisDims(*nDims, 0);
             itr->getSpace().getSimpleExtentDims(thisDims.data(), maxDims.data());
             for (hsize_t idx = 0; idx < *nDims; ++idx)
@@ -48,8 +44,7 @@ namespace H5Composites
             mergeAxis = defaultAxis;
         // Build up the full size along the merge axis
         hsize_t mergeSize = 0;
-        for (const H5::DataSet &ds : datasets)
-        {
+        for (const H5::DataSet &ds : datasets) {
             ds.getSpace().getSimpleExtentDims(dims.data());
             mergeSize += dims[*mergeAxis];
         }
@@ -58,12 +53,8 @@ namespace H5Composites
     }
 
     hsize_t extendDataSet(
-        H5::DataSet &target,
-        const H5::DataSet &source,
-        hsize_t mergeAxis,
-        hsize_t currentPosition,
-        std::size_t nRowsInBuffer)
-    {
+            H5::DataSet &target, const H5::DataSet &source, hsize_t mergeAxis,
+            hsize_t currentPosition, std::size_t nRowsInBuffer) {
         // Figure out the size needed to allocate the buffer
         hsize_t nDims = target.getSpace().getSimpleExtentNdims();
         std::vector<hsize_t> dims(nDims, 0);
@@ -79,9 +70,10 @@ namespace H5Composites
         std::vector<hsize_t> sourceDims(nDims, 0);
         source.getSpace().getSimpleExtentDims(sourceDims.data());
         std::size_t nSourceRows = sourceDims.at(mergeAxis);
-        SmartBuffer buffer(nElementsPerRow * std::min(nRowsInBuffer, nSourceRows) * target.getDataType().getSize());
-        for (std::size_t iRow = 0; iRow < nSourceRows; iRow += nRowsInBuffer)
-        {
+        SmartBuffer buffer(
+                nElementsPerRow * std::min(nRowsInBuffer, nSourceRows) *
+                target.getDataType().getSize());
+        for (std::size_t iRow = 0; iRow < nSourceRows; iRow += nRowsInBuffer) {
             std::vector<hsize_t> sourceSize = sourceDims;
             std::size_t nRowsToWrite = std::min(nRowsInBuffer, nSourceRows - iRow);
             sourceSize[mergeAxis] = nRowsToWrite;
@@ -105,14 +97,11 @@ namespace H5Composites
     }
 
     void mergeDataSets(
-        H5::Group &targetGroup,
-        const std::string &name,
-        const std::vector<H5::DataSet> &datasets,
-        std::size_t maxBufferSize,
-        hsize_t defaultMergeAxis)
-    {
-        std::pair<hsize_t, std::vector<hsize_t>> extentInfo = getMergedDataSetExtent(
-            datasets, defaultMergeAxis);
+            H5::Group &targetGroup, const std::string &name,
+            const std::vector<H5::DataSet> &datasets, std::size_t maxBufferSize,
+            hsize_t defaultMergeAxis) {
+        std::pair<hsize_t, std::vector<hsize_t>> extentInfo =
+                getMergedDataSetExtent(datasets, defaultMergeAxis);
         hsize_t mergeAxis = extentInfo.first;
         std::vector<hsize_t> fullDims = extentInfo.second;
         std::vector<hsize_t> maxDims = extentInfo.second;
@@ -128,7 +117,8 @@ namespace H5Composites
             if (idx != mergeAxis)
                 rowSize *= fullDims[idx];
         std::size_t nRowsInBuffer = maxBufferSize / rowSize;
-        std::cout << "Buffer size " << maxBufferSize << " allows for " << nRowsInBuffer << " rows in the buffer" << std::endl;
+        std::cout << "Buffer size " << maxBufferSize << " allows for " << nRowsInBuffer
+                  << " rows in the buffer" << std::endl;
         if (nRowsInBuffer == 0)
             throw std::invalid_argument("Not enough space in buffer for a single row!");
         std::vector<hsize_t> chunkSize = fullDims;
@@ -139,18 +129,16 @@ namespace H5Composites
         // TODO: compression level?
         // Now create the dataset
         H5::DataSet target = targetGroup.createDataSet(
-            name,
-            common,
-            H5::DataSpace(fullDims.size(), fullDims.data(), maxDims.data()),
-            propList);
+                name, common, H5::DataSpace(fullDims.size(), fullDims.data(), maxDims.data()),
+                propList);
         hsize_t currentPosition = 0;
         std::cout << "Begin merging " << datasets.size() << " datasets" << std::endl;
-        for (const H5::DataSet &dset : datasets)
-        {
+        for (const H5::DataSet &dset : datasets) {
             std::cout << "-";
             std::cout.flush();
-            currentPosition = extendDataSet(target, dset, mergeAxis, currentPosition, nRowsInBuffer);
+            currentPosition =
+                    extendDataSet(target, dset, mergeAxis, currentPosition, nRowsInBuffer);
         }
         std::cout << std::endl;
     }
-}
+} // namespace H5Composites
