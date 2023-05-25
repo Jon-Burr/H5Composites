@@ -15,6 +15,7 @@
 #include "H5Composites/DTypes.h"
 #include "H5Composites/H5Buffer.h"
 #include "H5Composites/SmartBuffer.h"
+#include "H5Composites/BufferWriteTraits.h"
 
 #include <string>
 #include <vector>
@@ -93,7 +94,16 @@ namespace H5Composites {
         /// Set multiple columns to be the index
         void setIndex(const std::vector<std::string> &index);
 
+        /// @brief Set an attribute on the dataset
+        /// @param name The name of the attribute
+        /// @param value The attribute's value
         void setAttribute(const std::string &name, const H5Buffer &value);
+
+        template <typename T>
+        void setAttribute(const std::string &name, const T &value)
+        {
+            return setAttribute(name, toBuffer(value));
+        }
 
     private:
         /// The data type
