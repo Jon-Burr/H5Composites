@@ -2,6 +2,7 @@
 #include "H5Composites/H5Enum.hxx"
 
 #include <algorithm>
+#include <variant>
 
 namespace {
     using namespace H5Composites;

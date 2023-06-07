@@ -3,6 +3,8 @@
 #include "H5Composites/DTypePrinting.hxx"
 #include "H5Composites/DTypeUtils.hxx"
 
+#include <cstring>
+
 namespace {
     using namespace H5Composites;
     std::string join(const std::string &prefix, const std::string &s) {
