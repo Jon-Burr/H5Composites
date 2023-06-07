@@ -22,6 +22,11 @@ namespace H5Composites {
     template <typename T>
     concept UnderlyingTypeTrait = detail::is_specialisation_of_v<T, UnderlyingType>;
 
+    /// Specialisation for C-arrays
+    template <typename T, std::size_t N> struct UnderlyingType<T[N]> {
+        using type = UnderlyingType_t<T>[N];
+    };
+
 } // namespace H5Composites
 
 #endif //> !H5COMPOSITTES_UNDERLYINGTYPE_HXX
