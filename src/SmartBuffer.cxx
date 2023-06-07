@@ -1,4 +1,4 @@
-#include "H5Composites/SmartBuffer.h"
+#include "H5Composites/SmartBuffer.hxx"
 #include <cstdlib>
 #include <cstring>
 
@@ -26,6 +26,13 @@ namespace H5Composites {
     }
 
     SmartBuffer::~SmartBuffer() { std::free(m_buffer); }
+
+    SmartBuffer SmartBuffer::copyValue(const void *ptr, std::size_t nBytes, std::size_t n) {
+        SmartBuffer buffer(nBytes * n);
+        for (std::size_t idx = 0; idx < n; ++idx)
+            std::memcpy(buffer.get(nBytes * idx), ptr, nBytes);
+        return buffer;
+    }
 
     SmartBuffer::operator bool() const { return m_buffer != nullptr; }
 

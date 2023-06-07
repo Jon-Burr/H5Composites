@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef H5COMPOSITES_IBUFFERWRITER_H
-#define H5COMPOSITES_IBUFFERWRITER_H
+#ifndef H5COMPOSITES_IBUFFERWRITER_HXX
+#define H5COMPOSITES_IBUFFERWRITER_HXX
 
 #include "H5Cpp.h"
 
@@ -22,9 +22,6 @@ namespace H5Composites {
     public:
         virtual ~IBufferWriter() = 0;
 
-        /// Write this object to the provided buffer
-        virtual void writeBuffer(void *buffer) const = 0;
-
         /// The H5 datatype of this object
         virtual H5::DataType h5DType() const = 0;
 
@@ -34,9 +31,9 @@ namespace H5Composites {
          * @param buffer The buffer to write to
          * @param dtype The data type of the target space
          */
-        virtual void writeBufferWithType(void *buffer, const H5::DataType &targetDType) const;
+        virtual void writeBuffer(void *buffer, const H5::DataType &targetDType) const = 0;
 
     }; //> end class IBufferWriter
 } // namespace H5Composites
 
-#endif //> !H5COMPOSITES_IBUFFERWRITER_H
+#endif //> !H5COMPOSITES_IBUFFERWRITER_HXX

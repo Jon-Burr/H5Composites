@@ -1,5 +1,5 @@
-#include "H5Composites/EnumUtils.h"
-#include "H5Composites/H5Buffer.h"
+#include "H5Composites/H5Enum.hxx"
+#include "H5Composites/H5Buffer.hxx"
 
 #include <stdexcept>
 
@@ -18,10 +18,11 @@ namespace H5Composites {
         return name;
     }
 
-    std::set<std::string> getEnumNames(const H5::EnumType &dtype, std::size_t startSize) {
-        std::set<std::string> value;
+    std::vector<std::string> getEnumNames(const H5::EnumType &dtype, std::size_t startSize) {
+        std::vector<std::string> value;
+        value.reserve(dtype.getNmembers());
         for (std::size_t idx = 0; idx < dtype.getNmembers(); ++idx)
-            value.insert(getEnumNameByIndex(dtype, idx, startSize));
+            value.push_back(getEnumNameByIndex(dtype, idx, startSize));
         return value;
     }
 } // namespace H5Composites

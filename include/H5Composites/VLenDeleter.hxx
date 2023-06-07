@@ -1,5 +1,5 @@
 /**
- * @file VLenDeleter.h
+ * @file VLenDeleter.hxx
  * @author Jon Burr
  * @brief Clean up any variable length data in the wrapped buffer
  * @version 0.0.0
@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef H5COMPOSITES_VLENDELETER_H
-#define H5COMPOSITES_VLENDELETER_H
+#ifndef H5COMPOSITES_VLENDELETER_HXX
+#define H5COMPOSITES_VLENDELETER_HXX
 
 #include "H5Cpp.h"
 
@@ -58,4 +58,4 @@ namespace H5Composites {
 
 } // namespace H5Composites
 
-#endif //> !H5COMPOSITES_VLENDELETER_H
+#endif //> !H5COMPOSITES_VLENDELETER_HXX

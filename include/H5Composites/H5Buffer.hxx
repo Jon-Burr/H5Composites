@@ -1,5 +1,5 @@
 /**
- * @file H5Buffer.h
+ * @file H5Buffer.hxx
  * @author Jon Burr
  * @brief Provide RAII behaviour for a memory buffer holding the data for an instance of a H5 data
  * type
@@ -10,11 +10,11 @@
  *
  */
 
-#ifndef H5COMPOSITES_H5BUFFER_H
-#define H5COMPOSITES_H5BUFFER_H
+#ifndef H5COMPOSITES_H5BUFFER_HXX
+#define H5COMPOSITES_H5BUFFER_HXX
 
-#include "H5Composites/SmartBuffer.h"
-#include "H5Composites/VLenDeleter.h"
+#include "H5Composites/SmartBuffer.hxx"
+#include "H5Composites/VLenDeleter.hxx"
 #include <utility>
 
 namespace H5Composites {
@@ -90,4 +90,4 @@ namespace H5Composites {
     }; //> end class H5Buffer
 } // namespace H5Composites
 
-#endif //> !H5COMPOSITES_H5BUFFER_H
+#endif //> !H5COMPOSITES_H5BUFFER_HXX

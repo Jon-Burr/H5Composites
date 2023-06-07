@@ -1,10 +1,8 @@
-#include "H5Composites/DTypeIterator.h"
-#include "H5Composites/DTypeUtils.h"
-#include <functional>
-#include <numeric>
-#include <stdexcept>
+#include "H5Composites/DTypeIterator.hxx"
+#include "H5Composites/DTypeUtils.hxx"
 
 namespace H5Composites {
+
     DTypeIterator::ElemType DTypeIterator::getElemType(const H5::DataType &dtype) {
         if (dtype == H5::PredType::NATIVE_HBOOL)
             return ElemType::Boolean;
@@ -31,7 +29,7 @@ namespace H5Composites {
         }
     }
 
-    std::string DTypeIterator::to_string(ElemType elemType) {
+    std::string DTypeIterator::toString(ElemType elemType) {
         switch (elemType) {
         case ElemType::Boolean:
             return "Boolean";
@@ -60,40 +58,30 @@ namespace H5Composites {
         }
     }
 
-    DTypeIterator::DTypeIterator(const H5::DataType &dtype) : m_elemType(getElemType(dtype)) {
-        m_queues.emplace_back();
-        m_queues.back().emplace(dtype, "", 0);
-    }
+    DTypeIterator::DTypeIterator(const H5::DataType &dtype)
+            : m_dtype(dtype), m_elemType(getElemType(dtype)), m_currentDType(dtype) {}
 
     DTypeIterator &DTypeIterator::operator++() {
-        switch (m_elemType) {
-        case ElemType::Compound:
-            // Add a new queue for the contents of this compound
-            {
-                H5::CompType dtype = compDType();
-                m_queues.emplace_back();
-                for (std::size_t idx = 0; idx < dtype.getNmembers(); ++idx)
-                    m_queues.back().emplace(
-                            dtype.getMemberDataType(idx), dtype.getMemberName(idx),
-                            dtype.getMemberOffset(idx));
-            }
-            m_elemType = getElemType(this->dtype());
-            return *this;
-        default:
-            // Pop the current member
-            m_queues.back().pop();
-            if (m_queues.back().size() == 0) {
-                // If we have no more members in the current queue we've either reached the close
-                // of a compound type or the end of the whole type
-                m_queues.pop_back();
-                if (m_queues.size() == 0)
-                    m_elemType = ElemType::End;
-                else
-                    m_elemType = ElemType::CompoundClose;
-            } else
-                m_elemType = getElemType(dtype());
+        if (m_elemType == ElemType::Compound) {
+            H5::CompType comp = compDType();
+            m_compounds.emplace_back(comp, comp.getNmembers(), 0);
+            m_currentDType = comp.getMemberDataType(0);
+            m_elemType = getElemType(m_currentDType);
             return *this;
         }
+        if (m_compounds.empty()) {
+            m_currentDType = H5::DataType();
+            m_elemType = ElemType::End;
+        } else if (++std::get<2>(m_compounds.back()) == std::get<1>(m_compounds.back())) {
+            m_elemType = ElemType::CompoundClose;
+            m_currentDType = std::get<0>(m_compounds.back());
+            m_compounds.pop_back();
+        } else {
+            m_currentDType = std::get<0>(m_compounds.back())
+                                     .getMemberDataType(std::get<2>(m_compounds.back()));
+            m_elemType = getElemType(m_currentDType);
+        }
+        return *this;
     }
 
     DTypeIterator DTypeIterator::operator++(int) {
@@ -102,27 +90,59 @@ namespace H5Composites {
         return copy;
     }
 
-    bool operator==(const DTypeIterator &lhs, const DTypeIterator &rhs) {
-        return lhs.m_elemType == rhs.m_elemType && lhs.m_queues == rhs.m_queues;
+    std::partial_ordering operator<=>(const DTypeIterator &lhs, const DTypeIterator &rhs) {
+        if (lhs.elemType() == DTypeIterator::ElemType::End &&
+            rhs.elemType() == DTypeIterator::ElemType::End)
+            return std::partial_ordering::equivalent;
+        if (lhs.m_dtype != rhs.m_dtype)
+            return std::partial_ordering::unordered;
+        for (std::size_t depth = 0; depth < std::min(lhs.depth(), rhs.depth()); ++depth) {
+            std::weak_ordering cmp = std::get<2>(lhs.m_compounds.at(depth)) <=>
+                                     std::get<2>(rhs.m_compounds.at(depth));
+            if (cmp != std::weak_ordering::equivalent)
+                return cmp;
+        }
+        std::weak_ordering cmp = lhs.depth() <=> rhs.depth();
+        if (cmp != std::weak_ordering::equivalent)
+            return cmp;
+        if (lhs.depth() == 0) {
+            if (lhs.elemType() == rhs.elemType())
+                return std::partial_ordering::equivalent;
+            else
+                return std::partial_ordering::less;
+        }
+        return std::partial_ordering::equivalent;
     }
 
-    bool operator!=(const DTypeIterator &lhs, const DTypeIterator &rhs) { return !(lhs == rhs); }
+    DTypeIterator DTypeIterator::skipToCompoundClose() {
+        DTypeIterator itr = *this;
+        if (itr.m_compounds.empty()) {
+            itr.m_currentDType = H5::DataType();
+            itr.m_elemType = ElemType::End;
+        } else {
+            const auto &[dt, max, idx] = itr.m_compounds.back();
+            itr.m_currentDType = dt;
+            itr.m_elemType = ElemType::CompoundClose;
+            itr.m_compounds.pop_back();
+        }
+        return itr;
+    }
 
-    DTypeIterator &DTypeIterator::skipToCompoundClose() {
-        m_queues.pop_back();
-        if (m_queues.size() == 0)
-            m_elemType = ElemType::End;
-        else
-            m_elemType = ElemType::Compound;
-        return *this;
+    std::string DTypeIterator::name() const {
+        if (m_compounds.empty())
+            return "";
+        const auto &[dt, max, idx] = m_compounds.back();
+        return dt.getMemberName(idx);
     }
 
     std::vector<std::string> DTypeIterator::nestedNames() const {
-        std::vector<std::string> result;
-        result.reserve(depth());
-        for (auto itr = m_queues.begin() + 1; itr != m_queues.end(); ++itr)
-            result.push_back(std::get<1>(itr->front()));
-        return result;
+        if (m_compounds.empty())
+            return {};
+        std::vector<std::string> names;
+        names.reserve(depth());
+        for (const auto &[dt, max, idx] : m_compounds)
+            names.push_back(dt.getMemberName(idx));
+        return names;
     }
 
     std::string DTypeIterator::fullName(const std::string &sep) const {
@@ -137,44 +157,52 @@ namespace H5Composites {
         return result;
     }
 
-    std::size_t DTypeIterator::nestedOffset() const {
-        std::size_t offset = std::get<2>(m_queues.back().front());
+    std::size_t DTypeIterator::offset() const {
+        if (m_elemType == ElemType::End ||
+            (m_compounds.empty() && m_elemType == ElemType::CompoundClose))
+            return m_dtype.getSize();
+        std::size_t offset = 0;
+        for (const auto &[dt, max, idx] : m_compounds)
+            offset += dt.getMemberOffset(idx);
         if (m_elemType == ElemType::CompoundClose)
-            return offset + dtype().getSize();
-        else
-            return offset;
+            offset += m_currentDType.getSize();
+        return offset;
     }
 
-    std::size_t DTypeIterator::currentOffset() const {
-        std::size_t offset = std::accumulate(
-                m_queues.begin(), m_queues.end(), std::size_t{0},
-                [](std::size_t v, const auto &q) { return v + std::get<2>(q.front()); });
+    std::size_t DTypeIterator::nestedOffset() const {
+        if (m_elemType == ElemType::End ||
+            (m_compounds.empty() && m_elemType == ElemType::CompoundClose))
+            return m_dtype.getSize();
+        if (m_compounds.empty())
+            return 0;
+        const auto &[dt, max, idx] = m_compounds.back();
+        std::size_t offset = dt.getMemberOffset(idx);
         if (m_elemType == ElemType::CompoundClose)
-            return offset + dtype().getSize();
-        else
-            return offset;
+            offset += m_currentDType.getSize();
+        return offset;
     }
+
+    std::size_t DTypeIterator::depth() const { return m_compounds.size(); }
 
     H5::IntType DTypeIterator::intDType() const {
         if (m_elemType != ElemType::Integer)
             throw std::invalid_argument(
-                    "Element type " + to_string(m_elemType) + " is not an integer");
+                    "Element type " + toString(m_elemType) + " is not an integer");
         return dtype().getId();
     }
 
     H5::FloatType DTypeIterator::floatDType() const {
         if (m_elemType != ElemType::Float)
-            throw std::invalid_argument(
-                    "Element type " + to_string(m_elemType) + " is not a float");
+            throw std::invalid_argument("Element type " + toString(m_elemType) + " is not a float");
         return dtype().getId();
     }
 
-    bool DTypeIterator::hasNumericDType() const { return H5Composites::isNumericDType(dtype()); }
+    bool DTypeIterator::hasNumericDType() const { return isNumericDType(dtype()); }
 
     H5::PredType DTypeIterator::numericDType() const {
         if (!hasNumericDType())
             throw std::invalid_argument(
-                    "Element type " + to_string(m_elemType) +
+                    "Element type " + toString(m_elemType) +
                     " does not have a native numeric type");
         return getNativeNumericDType(dtype());
     }
@@ -187,7 +215,7 @@ namespace H5Composites {
     H5::PredType DTypeIterator::predefinedDType() const {
         if (!hasPredefinedDType())
             throw std::invalid_argument(
-                    "Element type " + to_string(m_elemType) +
+                    "Element type " + toString(m_elemType) +
                     " does not have a native predefined type");
         return getNativePredefinedDType(dtype());
     }
@@ -195,42 +223,42 @@ namespace H5Composites {
     H5::PredType DTypeIterator::bitfieldDType() const {
         if (m_elemType != ElemType::Bitfield)
             throw std::invalid_argument(
-                    "Element type " + to_string(m_elemType) + " is not a bitfield");
+                    "Element type " + toString(m_elemType) + " is not a bitfield");
         return getNativeBitfieldDType(dtype());
     }
 
     H5::StrType DTypeIterator::strDType() const {
         if (m_elemType != ElemType::String)
             throw std::invalid_argument(
-                    "Element type " + to_string(m_elemType) + " is not a string");
+                    "Element type " + toString(m_elemType) + " is not a string");
         return dtype().getId();
     }
 
     H5::EnumType DTypeIterator::enumDType() const {
         if (m_elemType != ElemType::Enum)
-            throw std::invalid_argument(
-                    "Element type " + to_string(m_elemType) + " is not an enum");
+            throw std::invalid_argument("Element type " + toString(m_elemType) + " is not an enum");
         return dtype().getId();
     }
 
     H5::ArrayType DTypeIterator::arrDType() const {
         if (m_elemType != ElemType::Array)
             throw std::invalid_argument(
-                    "Element type " + to_string(m_elemType) + " is not an array");
+                    "Element type " + toString(m_elemType) + " is not an array");
         return dtype().getId();
     }
 
     H5::CompType DTypeIterator::compDType() const {
         if (m_elemType != ElemType::Compound && m_elemType != ElemType::CompoundClose)
             throw std::invalid_argument(
-                    "Element type " + to_string(m_elemType) + " is not a compoound type");
+                    "Element type " + toString(m_elemType) + " is not a compoound type");
         return dtype().getId();
     }
 
     H5::VarLenType DTypeIterator::varLenDType() const {
         if (m_elemType != ElemType::Variable)
             throw std::invalid_argument(
-                    "Element type " + to_string(m_elemType) + " is not a variable length type");
+                    "Element type " + toString(m_elemType) + " is not a variable length type");
         return dtype().getId();
     }
+
 } // namespace H5Composites

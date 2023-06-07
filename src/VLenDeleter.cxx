@@ -1,4 +1,4 @@
-#include "H5Composites/VLenDeleter.h"
+#include "H5Composites/VLenDeleter.hxx"
 
 namespace H5Composites {
     VLenDeleter::VLenDeleter(

@@ -1,20 +1,7 @@
-/**
- * @file SmartBuffer.h
- * @author Jon Burr
- * @brief Provide RAII behaviour for memory buffers allocated with malloc and free
- * @version 0.0.0
- * @date 2021-12-09
- *
- * @copyright Copyright (c) 2021
- *
- */
-
-#ifndef H5COMPOSITES_SMARTBUFFER_H
-#define H5COMPOSITES_SMARTBUFFER_H
+#ifndef H5COMPOSITES_SMARTBUFFER_HXX
+#define H5COMPOSITES_SMARTBUFFER_HXX
 
 #include <cstddef>
-#include <cstring>
-#include <utility>
 
 namespace H5Composites {
     /**
@@ -46,11 +33,10 @@ namespace H5Composites {
 
         /// Create a smart buffer by copying a value
         template <typename T> static SmartBuffer copyValue(const T &value, std::size_t n = 1) {
-            SmartBuffer buffer(sizeof(T) * n);
-            for (std::size_t idx = 0; idx < n; ++idx)
-                std::memcpy(buffer.get(idx * sizeof(T)), &value, sizeof(T));
-            return std::move(buffer);
+            return copyValue(&value, sizeof(T), n);
         }
+
+        static SmartBuffer copyValue(const void *ptr, std::size_t nBytes, std::size_t n = 1);
 
         explicit operator bool() const;
 
@@ -75,4 +61,4 @@ namespace H5Composites {
     };
 } // namespace H5Composites
 
-#endif //> !H5COMPOSITES_SMARTBUFFER_H
+#endif //> !H5COMPOSITES_SMARTBUFFER_HXX

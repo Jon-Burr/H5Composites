@@ -1,6 +1,6 @@
 #define BOOST_TEST_MODULE dtypes
 
-#include "H5Composites/DTypes.h"
+#include "H5Composites/H5DType.hxx"
 #include <boost/test/included/unit_test.hpp>
 
 BOOST_TEST_DONT_PRINT_LOG_VALUE(H5::PredType)

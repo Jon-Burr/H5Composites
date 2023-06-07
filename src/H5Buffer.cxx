@@ -8,7 +8,7 @@
  *
  */
 
-#include "H5Composites/H5Buffer.h"
+#include "H5Composites/H5Buffer.hxx"
 
 namespace H5Composites {
     H5Buffer::H5Buffer() : m_dtype(H5::PredType::NATIVE_INT) {}
