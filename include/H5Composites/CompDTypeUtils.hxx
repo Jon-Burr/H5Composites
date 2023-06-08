@@ -20,6 +20,7 @@
 #include "H5Cpp.h"
 
 #include <iterator>
+#include <ranges>
 #include <vector>
 
 namespace H5Composites {
@@ -36,24 +37,21 @@ namespace H5Composites {
     /**
      * @brief Get a H5 compound data type from a range of elements
      *
-     * @tparam Iterator The iterator type
-     * @param begin The start of the range
-     * @param end The end point of the range
+     * @tparam Range The range type
+     * @param range The range over which to act
      * @return The resulting data type
      *
      * Each element of the range is a named field in the compound data type. The name of each field
      * will be set to 'element' plus the index of the element in the range.
      */
-    template <std::input_iterator Iterator>
-    H5::CompType getCompoundDTypeFromRange(Iterator begin, Iterator end);
+    template <std::ranges::input_range Range> H5::CompType getCompoundDTypeFromRange(Range range);
 
     /**
      * @brief Get a H5 compound data type from a range of elements
      *
-     * @tparam Iterator The iterator type
+     * @tparam Range The range type
      * @tparam T The wrapper type to use
-     * @param begin The start of the range
-     * @param end The end point of the range
+     * @param range The range over which to act
      * @return The resulting data type
      *
      * Each element of the range is a named field in the compound data type. The name of each field
@@ -61,8 +59,8 @@ namespace H5Composites {
      *
      * This version is only necessary if H5Composites::UnderlyingType_t<T> != T
      */
-    template <typename T, std::input_iterator Iterator>
-    H5::CompType getCompoundDTypeFromRange(Iterator begin, Iterator end);
+    template <typename T, std::ranges::input_range Range>
+    H5::CompType getCompoundDTypeFromRange(Range range);
 
     /**
      * @brief Read the element at the specified index from the composite data type
@@ -75,7 +73,7 @@ namespace H5Composites {
      * @return The read element
      */
     template <BufferReadable T>
-        requires (!WrapperTrait<T>)
+        requires(!WrapperTrait<T>)
     void readCompositeElement(
             T &value, const void *buffer, const H5::CompType &dtype, std::size_t idx);
 
@@ -90,10 +88,9 @@ namespace H5Composites {
      * @return The read element
      */
     template <BufferReadable T>
-        requires (!WrapperTrait<T>)
+        requires(!WrapperTrait<T>)
     void readCompositeElement(
             T &value, const void *buffer, const H5::CompType &dtype, const std::string &name);
-
 
     /**
      * @brief Read the element at the specified index from the composite data type
@@ -108,7 +105,8 @@ namespace H5Composites {
     template <BufferReadable T>
         requires WrapperTrait<T>
     void readCompositeElement(
-            UnderlyingType_t<T> &value, const void *buffer, const H5::CompType &dtype, std::size_t idx);
+            UnderlyingType_t<T> &value, const void *buffer, const H5::CompType &dtype,
+            std::size_t idx);
 
     /**
      * @brief Read the element with the specified name from the composite data type
@@ -123,7 +121,8 @@ namespace H5Composites {
     template <BufferReadable T>
         requires WrapperTrait<T>
     void readCompositeElement(
-            UnderlyingType_t<T> &value, const void *buffer, const H5::CompType &dtype, const std::string &name);
+            UnderlyingType_t<T> &value, const void *buffer, const H5::CompType &dtype,
+            const std::string &name);
 
     /**
      * @brief Read the element at the specified index from the composite data type
@@ -239,31 +238,28 @@ namespace H5Composites {
     /**
      * @brief Write the provided range to the buffer with the specified data type
      *
-     * @tparam Iterator The input iterator type
-     * @param begin The start of the range
-     * @param end The end of the range
+     * @tparam Range The input range type
+     * @param range The input range
      * @param buffer The buffer to write into
      * @param dtype The type in the buffer
      */
-    template <std::input_iterator Iterator>
-    void writeRangeToCompoundDType(
-            Iterator begin, Iterator end, void *buffer, const H5::CompType &dtype);
+    template <std::ranges::input_range Range>
+    void writeRangeToCompoundDType(Range range, void *buffer, const H5::CompType &dtype);
 
     /**
      * @brief Write the provided range to the buffer with the specified data type
      *
-     * @tparam Iterator The input iterator type
+     * @tparam Range The input range type
      * @tparam T The wrapper type to use
-     * @param begin The start of the range
-     * @param end The end of the range
+     * @param range The input range
      * @param buffer The buffer to write into
      * @param dtype The type in the buffer
      *
      * This version is only necessary if H5Composites::UnderlyingType_t<T> != T
      */
-    template <BufferWritable T, std::input_iterator Iterator>
+    template <BufferWritable T, std::ranges::input_range Range>
     void writeRangeToCompoundDType(
-            Iterator begin, Iterator end, void *buffer, const H5::CompType &dtype);
+            Range range, void *buffer, const H5::CompType &dtype);
 
     /**
      * @brief Get the pointer to the position in the buffer for the specified member

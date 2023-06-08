@@ -2,19 +2,18 @@
 
 namespace H5Composites {
 
-    template <std::input_iterator Iterator>
-    H5::CompType getCompoundDTypeFromRange(Iterator begin, Iterator end) {
-        return getCompoundDTypeFromRange<
-                std::decay_t<typename std::iterator_traits<Iterator>::reference>>(begin, end);
+    template <std::ranges::input_range Range> H5::CompType getCompoundDTypeFromRange(Range range) {
+        return getCompoundDTypeFromRange<std::decay_t<std::ranges::range_reference_t<Range>>>(
+                range);
     }
 
-    template <typename T, std::input_iterator Iterator>
-    H5::CompType getCompoundDTypeFromRange(Iterator begin, Iterator end) {
+    template <typename T, std::ranges::input_range Range>
+    H5::CompType getCompoundDTypeFromRange(Range range) {
         // First iterate through and get all of the data types
         std::size_t totalSize = 0;
         std::vector<H5::DataType> dtypes;
-        for (Iterator itr = begin; itr != end; ++itr) {
-            H5::DataType dtype = getH5DType<T>(*itr);
+        for (const UnderlyingType_t<T> &value : range) {
+            H5::DataType dtype = getH5DType<T>(value);
             totalSize += dtype.getSize();
             dtypes.push_back(dtype);
         }
@@ -118,20 +117,18 @@ namespace H5Composites {
         writeCompositeElement<T>(val, buffer, dtype, dtype.getMemberIndex(name));
     }
 
-    template <std::input_iterator Iterator>
-    void writeRangeToCompoundDType(
-            Iterator begin, Iterator end, void *buffer, const H5::CompType &dtype) {
-        writeRangeToCompoundDType<std::decay_t<typename std::iterator_traits<Iterator>::reference>>(
-                begin, end, buffer, dtype);
+    template <std::ranges::input_range Range>
+    void writeRangeToCompoundDType(Range range, void *buffer, const H5::CompType &dtype) {
+        writeRangeToCompoundDType<std::decay_t<std::ranges::range_reference_t<Range>>>(
+                range, buffer, dtype);
     }
 
-    template <BufferWritable T, std::input_iterator Iterator>
-    void writeRangeToCompoundDType(
-            Iterator begin, Iterator end, void *buffer, const H5::CompType &dtype) {
-        if (std::distance(begin, end) != dtype.getNmembers())
+    template <BufferWritable T, std::ranges::input_range Range>
+    void writeRangeToCompoundDType(Range range, void *buffer, const H5::CompType &dtype) {
+        if (std::ranges::size(range) != dtype.getNmembers())
             throw std::invalid_argument("Size of data-type does not match input range");
         std::size_t idx = 0;
-        for (Iterator itr = begin; itr != end; ++itr, ++idx)
-            writeCompositeElement<T>(*itr, buffer, dtype, idx);
+        for (const UnderlyingType_t<T> &value : range)
+            writeCompositeElement<T>(value, buffer, dtype, idx++);
     }
 } // namespace H5Composites
