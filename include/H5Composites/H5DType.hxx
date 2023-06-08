@@ -52,23 +52,23 @@ namespace H5Composites {
     template <WithStaticH5DType T> auto getH5DType() { return H5DType<T>::getType(); }
     template <WithStaticH5DType T>
         requires(!WrapperTrait<T>)
-    auto getH5DType(T &) {
+    auto getH5DType(const T &) {
         return getH5DType<T>();
     }
     template <WithStaticH5DType T>
         requires(WrapperTrait<T>)
-    auto getH5DType(UnderlyingType_t<T> &) {
+    auto getH5DType(const UnderlyingType_t<T> &) {
         return getH5DType<T>();
     }
 
     template <WithDynamicH5DType T>
         requires(!WrapperTrait<T>)
-    auto getH5DType(T &t) {
+    auto getH5DType(const T &t) {
         return H5DType<T>::getType(t);
     }
     template <WithDynamicH5DType T>
         requires(WrapperTrait<T>)
-    auto getH5DType(UnderlyingType_t<T> &t) {
+    auto getH5DType(const UnderlyingType_t<T> &t) {
         return H5DType<T>::getType(t);
     }
 
