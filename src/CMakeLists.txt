@@ -4,6 +4,7 @@ find_package(Boost)
 add_library(H5Composites SHARED)
 target_sources(H5Composites
     PRIVATE
+    CompDTypeUtils.cxx
     DTypeConversion.cxx
     DTypeIterator.cxx
     DTypePrecision.cxx

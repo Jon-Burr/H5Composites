@@ -1,4 +1,4 @@
-#include "H5Composites/CompDTypeUtils.h"
+#include "H5Composites/CompDTypeUtils.hxx"
 
 namespace H5Composites {
     H5::CompType createCompoundDType(
