@@ -22,14 +22,20 @@
 
 namespace H5Composites {
     template <typename T>
-    concept BufferWritable = requires(const T &t, void *buffer, const H5::DataType &dtype) {
-        t.writeBuffer(buffer, dtype);
+    concept BufferWritableType = requires(const T &t, void *buffer, const H5::DataType &dtype) {
+        { t.writeBuffer(buffer, dtype) } -> std::convertible_to<void>;
     };
 
     template <typename T> struct BufferWriteTraits;
 
     template <typename T>
-        requires BufferWritable<UnderlyingType_t<T>>
+    concept BufferWritable =
+            requires(const UnderlyingType_t<T> &t, void *buffer, const H5::DataType &dtype) {
+                { BufferWriteTraits<T>::write(t, buffer, dtype) } -> std::convertible_to<void>;
+            };
+
+    template <typename T>
+        requires BufferWritableType<UnderlyingType_t<T>>
     struct BufferWriteTraits<T> {
         static void write(const UnderlyingType_t<T> &t, void *buffer, const H5::DataType &dtype) {
             t.writeBuffer(buffer, dtype);
@@ -37,7 +43,7 @@ namespace H5Composites {
     };
 
     template <typename T>
-        requires Trivial<UnderlyingType_t<T>> && (!BufferWritable<UnderlyingType_t<T>>)
+        requires Trivial<UnderlyingType_t<T>> && (!BufferWritableType<UnderlyingType_t<T>>)
     struct BufferWriteTraits<T> {
 
         static void write(const UnderlyingType_t<T> &t, void *buffer, const H5::DataType &dtype) {
@@ -54,20 +60,22 @@ namespace H5Composites {
         }
     };
 
-    template <WrapperTrait T> H5Buffer toBuffer(const UnderlyingType_t<T> &value) {
+    template <BufferWritable T>
+        requires WrapperTrait<T>
+    H5Buffer toBuffer(const UnderlyingType_t<T> &value) {
         H5::DataType dtype = getH5DType<T>(value);
         H5Buffer buffer(dtype);
         BufferWriteTraits<T>::write(value, buffer.get(), dtype);
-        return std::move(buffer);
+        return buffer;
     }
 
-    template <typename T>
+    template <BufferWritable T>
         requires(!WrapperTrait<T>)
     H5Buffer toBuffer(const T &value) {
         H5::DataType dtype = getH5DType<T>(value);
         H5Buffer buffer(dtype);
         BufferWriteTraits<T>::write(value, buffer.get(), dtype);
-        return std::move(buffer);
+        return buffer;
     }
 
 } // namespace H5Composites

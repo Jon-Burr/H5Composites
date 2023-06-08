@@ -22,40 +22,66 @@
 #include <cstring>
 
 namespace H5Composites {
-    /// Whether or not a type is constructible from a buffer and a data type
+    /// Whether or not a type can read from a buffer
     template <typename T>
-    concept BufferConstructible = std::constructible_from<T, const void *, const H5::DataType &>;
+    concept BufferReadableType = requires(T &t, const void *buffer, const H5::DataType &dtype) {
+        { t.readBuffer(buffer, dtype) } -> std::convertible_to<void>;
+    };
 
     template <typename T> struct BufferReadTraits;
 
     template <typename T>
-        requires BufferConstructible<UnderlyingType_t<T>>
+    concept BufferReadable =
+            requires(UnderlyingType_t<T> &t, const void *buffer, const H5::DataType &dtype) {
+                { BufferReadTraits<T>::read(t, buffer, dtype) } -> std::convertible_to<void>;
+            };
+
+    template <typename T>
+        requires BufferReadableType<UnderlyingType_t<T>>
     struct BufferReadTraits<T> {
-        static UnderlyingType_t<T> read(const void *buffer, const H5::DataType &dtype) {
-            return UnderlyingType_t<T>(buffer, dtype);
+        static void read(UnderlyingType_t<T> &t, const void *buffer, const H5::DataType &dtype) {
+            t.readBuffer(buffer, dtype);
         }
     };
 
     template <typename T>
         requires Trivial<UnderlyingType<T>> && WithStaticH5DType<T>
     struct BufferReadTraits<T> {
-        static UnderlyingType_t<T> read(const void *buffer, const H5::DataType &dtype) {
+
+        static void read(UnderlyingType_t<T> &t, const void *buffer, const H5::DataType &dtype) {
             const H5::DataType &target = getH5DType<T>();
             if (dtype == target)
-                return *reinterpret_cast<const UnderlyingType_t<T> *>(buffer);
+                t = *reinterpret_cast<const UnderlyingType_t<T> *>(buffer);
             else
-                return *reinterpret_cast<const UnderlyingType_t<T> *>(
+                t = *reinterpret_cast<const UnderlyingType_t<T> *>(
                         convert(buffer, dtype, target).get());
         }
     };
-    template <typename T> UnderlyingType_t<T> fromBuffer(const H5Buffer &buffer) {
-        return BufferReadTraits<T>::read(buffer.get(), buffer.dtype());
+
+    template <BufferReadable T>
+        requires WrapperTrait<T>
+    void fromBuffer(UnderlyingType_t<T> &t, const void *buffer, const H5::DataType &dtype) {
+        BufferReadTraits<T>::read(t, buffer, dtype);
     }
 
-    template <typename T>
-    UnderlyingType_t<T> fromBuffer(const void *buffer, const H5::DataType &dtype) {
-        return BufferReadTraits<T>::read(buffer, dtype);
+    template <BufferReadable T>
+        requires WrapperTrait<T>
+    void fromBuffer(UnderlyingType_t<T> &t, const H5Buffer &buffer) {
+        BufferReadTraits<T>::read(t, buffer.get(), buffer.dtype());
     }
+
+    template <BufferReadable T>
+        requires(!WrapperTrait<T>)
+    void fromBuffer(T &t, const void *buffer, const H5::DataType &dtype) {
+        BufferReadTraits<T>::read(t, buffer, dtype);
+    }
+
+    template <BufferReadable T>
+        requires(!WrapperTrait<T>)
+    void fromBuffer(T &t, const H5Buffer &buffer) {
+        BufferReadTraits<T>::read(t, buffer.get(), buffer.dtype());
+    }
+
 } // namespace H5Composites
 
 #endif //> !H5COMPOSITES_BUFFERREADTRAITS_HXX
