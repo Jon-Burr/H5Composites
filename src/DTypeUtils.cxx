@@ -10,7 +10,6 @@
  */
 
 #include "H5Composites/DTypeUtils.hxx"
-#include <numeric>
 
 namespace H5Composites {
     const std::vector<H5::PredType> &nativePredefinedDTypes() {
@@ -115,17 +114,6 @@ namespace H5Composites {
             hid_t id;
         } closer = {native_id};
         return H5::DataType(native_id);
-    }
-
-    std::vector<hsize_t> getArrayDims(const H5::ArrayType &dtype) {
-        std::vector<hsize_t> result(dtype.getArrayNDims());
-        dtype.getArrayDims(result.data());
-        return result;
-    }
-
-    std::size_t getNArrayElements(const H5::ArrayType &dtype) {
-        std::vector<hsize_t> dims = getArrayDims(dtype);
-        return std::accumulate(dims.begin(), dims.end(), 1, std::multiplies<hsize_t>());
     }
 
 } // namespace H5Composites

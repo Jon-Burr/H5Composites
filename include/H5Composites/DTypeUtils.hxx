@@ -96,21 +96,5 @@ namespace H5Composites {
      */
     H5::DataType getNativeDType(const H5::DataType &dtype);
 
-    /**
-     * @brief Get the dimensions of the array type
-     *
-     * @param dtype The array data type
-     * @return The dimensions
-     */
-    std::vector<hsize_t> getArrayDims(const H5::ArrayType &dtype);
-
-    /**
-     * @brief Get the total number of elements in an array type
-     *
-     * @param dtype The array type
-     * @return The number of elements
-     */
-    std::size_t getNArrayElements(const H5::ArrayType &dtype);
-
 } // namespace H5Composites
 #endif //>! H5COMPOSITES_DTYPEUTILS_HXX
