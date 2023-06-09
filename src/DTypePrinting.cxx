@@ -1,4 +1,5 @@
 #include "H5Composites/DTypePrinting.hxx"
+#include "H5Composites/ArrayDTypeUtils.hxx"
 #include "H5Composites/DTypeDispatch.hxx"
 #include "H5Composites/DTypeIterator.hxx"
 #include "H5Composites/DTypeUtils.hxx"

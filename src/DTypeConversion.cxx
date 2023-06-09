@@ -1,4 +1,5 @@
 #include "H5Composites/DTypeConversion.hxx"
+#include "H5Composites/ArrayDTypeUtils.hxx"
 #include "H5Composites/DTypePrecision.hxx"
 #include "H5Composites/DTypePrinting.hxx"
 #include "H5Composites/DTypeUtils.hxx"
@@ -154,17 +155,21 @@ namespace H5Composites {
         return status;
     }
 
+    InvalidConversionError::InvalidConversionError(
+            const H5::DataType &source, const H5::DataType &target,
+            const ConversionCriteria &criteria)
+            : std::invalid_argument(toString(source) + " -> " + toString(target)), source(source),
+              target(target), criteria(criteria) {}
+
     H5Buffer convert(
-            const void *source, const H5::DataType &sourceDType, const H5::DataType &targetDType,
+            const ConstH5BufferView &source, const H5::DataType &targetDType,
             const ConversionCriteria &criteria) {
         std::string error;
-        if (!checkConversion(sourceDType, targetDType).check(error, criteria))
-            throw H5::DataSetIException(
-                    "convert",
-                    toString(sourceDType) + " -> " + toString(targetDType) + ":\n" + error);
-        std::size_t size = std::max(sourceDType.getSize(), targetDType.getSize());
+        if (!checkConversion(source.dtype(), targetDType).check(error, criteria))
+            throw InvalidConversionError(source.dtype(), targetDType, criteria);
+        std::size_t size = std::max(source.size(), targetDType.getSize());
         H5T_cdata_t *cdata{nullptr};
-        sourceDType.find(targetDType, &cdata);
+        source.dtype().find(targetDType, &cdata);
         if (!cdata)
             // This is just to be *very* safe. The underlying H5 implementation should throw on the
             // above call
@@ -174,8 +179,8 @@ namespace H5Composites {
             background = SmartBuffer(size, 0);
         SmartBuffer buffer(size);
         // Copy the source data into the buffer
-        std::memcpy(buffer.get(), source, sourceDType.getSize());
-        sourceDType.convert(targetDType, 1, buffer.get(), background.get());
+        std::memcpy(buffer.get(), source.get(), source.size());
+        source.dtype().convert(targetDType, 1, buffer.get(), background.get());
         if (targetDType.getSize() < size)
             buffer.resize(targetDType.getSize());
         return H5Buffer(std::move(buffer), targetDType);

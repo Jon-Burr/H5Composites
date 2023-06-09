@@ -1,6 +1,7 @@
 #ifndef H5COMPOSITES_H5DTYPE_HXX
 #define H5COMPOSITES_H5DTYPE_HXX
 
+#include "H5Composites/ArrayDTypeUtils.hxx"
 #include "H5Composites/DTypeUtils.hxx"
 #include "H5Composites/UnderlyingType.hxx"
 

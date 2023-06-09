@@ -13,6 +13,7 @@
 #ifndef H5COMPOSITES_H5BUFFER_HXX
 #define H5COMPOSITES_H5BUFFER_HXX
 
+#include "H5Composites/H5BufferView.hxx"
 #include "H5Composites/SmartBuffer.hxx"
 #include "H5Composites/VLenDeleter.hxx"
 #include <utility>
@@ -23,10 +24,10 @@ namespace H5Composites {
      * @brief RAII behaviour for a memory buffer containing the data for an instance of a
      * H5::DataType
      */
-    class H5Buffer {
+    class H5Buffer : public H5BufferView {
     public:
         /// Default constructor creates an empty pointer
-        H5Buffer();
+        H5Buffer() = default;
 
         /// Create a buffer to hold the specified type
         H5Buffer(const H5::DataType &dtype);
@@ -53,19 +54,6 @@ namespace H5Composites {
         /// Move assignment operator
         H5Buffer &operator=(H5Buffer &&other);
 
-        /// Whether this owns any memory
-        explicit operator bool() const;
-
-        /// The data type of this object. Note this is invalid if there is no held memory
-        const H5::DataType &dtype() const;
-
-        /// The size of the owned memory
-        std::size_t size() const;
-
-        /// The memory buffer
-        void *get();
-        const void *get() const;
-
         /// Transfer the ownership over this object's variable length data
         VLenDeleter transferVLenOwnership();
 
@@ -84,7 +72,6 @@ namespace H5Composites {
         void *release();
 
     private:
-        H5::DataType m_dtype;
         SmartBuffer m_buffer;
         VLenDeleter m_vlenDeleter;
     }; //> end class H5Buffer

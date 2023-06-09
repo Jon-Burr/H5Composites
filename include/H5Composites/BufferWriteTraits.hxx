@@ -13,7 +13,7 @@
 #define H5COMPOSITES_BUFFERWRITETRAITS_HXX
 
 #include "H5Composites/DTypeConversion.hxx"
-#include "H5Composites/H5Buffer.hxx"
+#include "H5Composites/H5BufferView.hxx"
 #include "H5Composites/H5DType.hxx"
 #include "H5Composites/UnderlyingType.hxx"
 #include "H5Composites/concepts.hxx"
@@ -22,23 +22,22 @@
 
 namespace H5Composites {
     template <typename T>
-    concept BufferWritableType = requires(const T &t, void *buffer, const H5::DataType &dtype) {
-        { t.writeBuffer(buffer, dtype) } -> std::convertible_to<void>;
+    concept BufferWritableType = requires(const T &t, H5BufferView buffer) {
+        { t.writeBuffer(buffer) } -> std::convertible_to<void>;
     };
 
     template <typename T> struct BufferWriteTraits;
 
     template <typename T>
-    concept BufferWritable =
-            requires(const UnderlyingType_t<T> &t, void *buffer, const H5::DataType &dtype) {
-                { BufferWriteTraits<T>::write(t, buffer, dtype) } -> std::convertible_to<void>;
-            };
+    concept BufferWritable = requires(const UnderlyingType_t<T> &t, H5BufferView buffer) {
+        { BufferWriteTraits<T>::write(t, buffer) } -> std::convertible_to<void>;
+    };
 
     template <typename T>
         requires BufferWritableType<UnderlyingType_t<T>>
     struct BufferWriteTraits<T> {
-        static void write(const UnderlyingType_t<T> &t, void *buffer, const H5::DataType &dtype) {
-            t.writeBuffer(buffer, dtype);
+        static void write(const UnderlyingType_t<T> &t, H5BufferView buffer) {
+            t.writeBuffer(buffer);
         }
     };
 
@@ -46,13 +45,13 @@ namespace H5Composites {
         requires Trivial<UnderlyingType_t<T>> && (!BufferWritableType<UnderlyingType_t<T>>)
     struct BufferWriteTraits<T> {
 
-        static void write(const UnderlyingType_t<T> &t, void *buffer, const H5::DataType &dtype) {
+        static void write(const UnderlyingType_t<T> &t, H5BufferView buffer) {
             const H5::DataType &sourceDType = getH5DType<T>(t);
-            if (sourceDType == dtype)
-                std::memcpy(buffer, &t, sizeof(UnderlyingType_t<T>));
+            if (sourceDType == buffer.dtype())
+                std::memcpy(buffer.get(), &t, sizeof(UnderlyingType_t<T>));
             else {
-                H5Buffer converted = convert(&t, sourceDType, dtype);
-                std::memcpy(buffer, converted.get(), dtype.getSize());
+                H5Buffer converted = convert(ConstH5BufferView(&t, sourceDType), buffer.dtype());
+                std::memcpy(buffer.get(), converted.get(), buffer.size());
                 // The provider of the buffer pointer is also responsible for any variable length
                 // memory attached to it so we relinquish control over that
                 converted.transferVLenOwnership().release();
@@ -65,7 +64,7 @@ namespace H5Composites {
     H5Buffer toBuffer(const UnderlyingType_t<T> &value) {
         H5::DataType dtype = getH5DType<T>(value);
         H5Buffer buffer(dtype);
-        BufferWriteTraits<T>::write(value, buffer.get(), dtype);
+        BufferWriteTraits<T>::write(value, buffer);
         return buffer;
     }
 
@@ -74,7 +73,7 @@ namespace H5Composites {
     H5Buffer toBuffer(const T &value) {
         H5::DataType dtype = getH5DType<T>(value);
         H5Buffer buffer(dtype);
-        BufferWriteTraits<T>::write(value, buffer.get(), dtype);
+        BufferWriteTraits<T>::write(value, buffer);
         return buffer;
     }
 

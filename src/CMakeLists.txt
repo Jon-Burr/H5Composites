@@ -6,12 +6,14 @@ target_sources(H5Composites
     PRIVATE
     ArrayDTypeUtils.cxx
     CompDTypeUtils.cxx
+    ConstH5BufferView.cxx
     DTypeConversion.cxx
     DTypeIterator.cxx
     DTypePrecision.cxx
     DTypePrinting.cxx
     DTypeUtils.cxx
     H5Buffer.cxx
+    H5BufferView.cxx
     H5DType.cxx
     H5Enum.cxx
     SmartBuffer.cxx

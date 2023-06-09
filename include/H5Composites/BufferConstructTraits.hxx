@@ -2,29 +2,27 @@
 #define H5COMPOSITES_BUFFERCONSTRUCTTRAITS_HXX
 
 #include "H5Composites/BufferReadTraits.hxx"
+#include "H5Composites/ConstH5BufferView.hxx"
 
 #include <concepts>
 
 namespace H5Composites {
     /// Whether or not a type is constructible from a buffer and a data type
     template <typename T>
-    concept BufferConstructibleType =
-            std::constructible_from<T, const void *, const H5::DataType &>;
+    concept BufferConstructibleType = std::constructible_from<T, const ConstH5BufferView &>;
 
     template <typename T> struct BufferConstructTraits;
 
     template <typename T>
-    concept BufferConstructible = requires(const void *buffer, const H5::DataType &dtype) {
-        {
-            BufferConstructTraits<T>::construct(buffer, dtype)
-        } -> std::convertible_to<UnderlyingType_t<T>>;
+    concept BufferConstructible = requires(const ConstH5BufferView &view) {
+        { BufferConstructTraits<T>::construct(view) } -> std::convertible_to<UnderlyingType_t<T>>;
     };
 
     template <typename T>
         requires BufferConstructibleType<UnderlyingType_t<T>>
     struct BufferConstructTraits<T> {
-        static UnderlyingType_t<T> construct(const void *buffer, const H5::DataType &dtype) {
-            return UnderlyingType_t<T>(buffer, dtype);
+        static UnderlyingType_t<T> construct(const ConstH5BufferView &view) {
+            return UnderlyingType_t<T>(view);
         }
     };
 
@@ -32,21 +30,18 @@ namespace H5Composites {
         requires BufferReadable<T> &&
                  (!BufferConstructibleType<UnderlyingType_t<T>>) && std::default_initializable<T>
     struct BufferConstructTraits<T> {
-        static UnderlyingType_t<T> construct(const void *buffer, const H5::DataType &dtype) {
+        static UnderlyingType_t<T> construct(const ConstH5BufferView &view) {
             UnderlyingType_t<T> value;
-            BufferReadTraits<T>::read(value, buffer, dtype);
+            BufferReadTraits<T>::read(value, view);
             return value;
         }
     };
 
-    template <BufferConstructible T> UnderlyingType_t<T> fromBuffer(const H5Buffer &buffer) {
-        return BufferConstructTraits<T>::construct(buffer.get(), buffer.dtype());
+    template <BufferConstructible T>
+    UnderlyingType_t<T> fromBuffer(const ConstH5BufferView &buffer) {
+        return BufferConstructTraits<T>::construct(buffer);
     }
 
-    template <BufferConstructible T>
-    UnderlyingType_t<T> fromBuffer(const void *buffer, const H5::DataType &dtype) {
-        return BufferConstructTraits<T>::construct(buffer, dtype);
-    }
 } // namespace H5Composites
 
 #endif //> !H5COMPOSITES_BUFFERCONSTRUCTTRAITS_HXX
