@@ -33,10 +33,10 @@ namespace H5Composites {
 
         /// Create a smart buffer by copying a value
         template <typename T> static SmartBuffer copyValue(const T &value, std::size_t n = 1) {
-            return copyValue(&value, sizeof(T), n);
+            return copy(&value, sizeof(T), n);
         }
 
-        static SmartBuffer copyValue(const void *ptr, std::size_t nBytes, std::size_t n = 1);
+        static SmartBuffer copy(const void *ptr, std::size_t nBytes, std::size_t n = 1);
 
         explicit operator bool() const;
 
