@@ -22,6 +22,27 @@
 #include <cstring>
 
 namespace H5Composites {
+    namespace detail {
+        class ReadConversionHelper {
+        public:
+            ReadConversionHelper(const ConstH5BufferView &buffer, const H5::DataType &readType)
+                    : m_buffer(buffer) {
+                if (buffer.dtype() != readType)
+                    m_storage = convert(buffer, readType);
+            }
+
+            const ConstH5BufferView &buffer() {
+                if (m_storage)
+                    return m_storage;
+                else
+                    return m_buffer;
+            }
+
+            // private:
+            ConstH5BufferView m_buffer;
+            H5Buffer m_storage;
+        };
+    } // namespace detail
     /// Whether or not a type can read from a buffer
     template <typename T>
     concept BufferReadableType = requires(T &t, const ConstH5BufferView &buffer) {
@@ -35,6 +56,10 @@ namespace H5Composites {
         { BufferReadTraits<T>::read(t, buffer) } -> std::convertible_to<void>;
     };
 
+    /// @brief Concept that signals that reading data from a buffer consists simply of copying it
+    template <typename T>
+    concept BufferReadIsCopy = BufferReadable<T> && BufferReadTraits<T>::memcpy;
+
     template <typename T>
         requires BufferReadableType<UnderlyingType_t<T>>
     struct BufferReadTraits<T> {
@@ -47,12 +72,11 @@ namespace H5Composites {
         requires Trivial<UnderlyingType<T>> && WithStaticH5DType<T>
     struct BufferReadTraits<T> {
 
+        static constexpr inline bool memcpy = true;
+
         static void read(UnderlyingType_t<T> &t, const ConstH5BufferView &buffer) {
-            const H5::DataType &target = getH5DType<T>();
-            if (buffer.dtype() == target)
-                t = *reinterpret_cast<const UnderlyingType_t<T> *>(buffer.get());
-            else
-                t = *reinterpret_cast<const UnderlyingType_t<T> *>(convert(buffer, target).get());
+            detail::ReadConversionHelper helper(buffer, getH5DType<T>);
+            t = *reinterpret_cast<const UnderlyingType_t<T> *>(helper.buffer().get());
         }
     };
 

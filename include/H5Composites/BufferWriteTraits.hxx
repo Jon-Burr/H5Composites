@@ -33,6 +33,10 @@ namespace H5Composites {
         { BufferWriteTraits<T>::write(t, buffer) } -> std::convertible_to<void>;
     };
 
+    /// @brief Concept that signals that writing data to a buffer consists simply of copying it
+    template <typename T>
+    concept BufferWriteIsCopy = BufferWritable<T> && BufferWriteTraits<T>::memcpy;
+
     template <typename T>
         requires BufferWritableType<UnderlyingType_t<T>>
     struct BufferWriteTraits<T> {
@@ -45,13 +49,15 @@ namespace H5Composites {
         requires Trivial<UnderlyingType_t<T>> && (!BufferWritableType<UnderlyingType_t<T>>)
     struct BufferWriteTraits<T> {
 
+        static constexpr inline bool memcpy = true;
+
         static void write(const UnderlyingType_t<T> &t, H5BufferView buffer) {
             const H5::DataType &sourceDType = getH5DType<T>(t);
             if (sourceDType == buffer.dtype())
                 std::memcpy(buffer.get(), &t, sizeof(UnderlyingType_t<T>));
             else {
                 H5Buffer converted = convert(ConstH5BufferView(&t, sourceDType), buffer.dtype());
-                std::memcpy(buffer.get(), converted.get(), buffer.size());
+                std::memcpy(buffer.get(), converted.get(), buffer.footprint());
                 // The provider of the buffer pointer is also responsible for any variable length
                 // memory attached to it so we relinquish control over that
                 converted.transferVLenOwnership().release();
