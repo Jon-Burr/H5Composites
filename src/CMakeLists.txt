@@ -18,6 +18,7 @@ target_sources(H5Composites
     H5DType.cxx
     H5Enum.cxx
     SmartBuffer.cxx
+    VLenCopier.cxx
     VLenDeleter.cxx
 )
 target_include_directories(H5Composites
