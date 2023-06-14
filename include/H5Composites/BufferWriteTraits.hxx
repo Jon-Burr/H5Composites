@@ -56,7 +56,7 @@ namespace H5Composites {
             if (sourceDType == buffer.dtype())
                 std::memcpy(buffer.get(), &t, sizeof(UnderlyingType_t<T>));
             else {
-                H5Buffer converted = convert(ConstH5BufferView(&t, sourceDType), buffer.dtype());
+                H5Buffer converted = convert(H5BufferConstView(&t, sourceDType), buffer.dtype());
                 std::memcpy(buffer.get(), converted.get(), buffer.footprint());
                 // The provider of the buffer pointer is also responsible for any variable length
                 // memory attached to it so we relinquish control over that

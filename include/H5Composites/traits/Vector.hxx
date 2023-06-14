@@ -27,7 +27,7 @@ namespace H5Composites {
         // location
         static inline constexpr bool memcpy = false;
 
-        static void read(std::vector<T, Allocator> &value, const ConstH5BufferView &buffer) {
+        static void read(std::vector<T, Allocator> &value, const H5BufferConstView &buffer) {
             if (buffer.dtype().getClass() != H5T_VLEN)
                 throw H5::DataTypeIException(
                         "BufferReadTraits<std::vector<T, Allocator>>",
@@ -42,9 +42,9 @@ namespace H5Composites {
     template <WithStaticH5DType T, typename Allocator>
         requires BufferConstructible<T> && (!(BufferReadIsCopy<T> && std::default_initializable<T>))
     struct BufferReadTraits<std::vector<T, Allocator>> {
-        static void read(std::vector<T, Allocator> &value, const ConstH5BufferView &buffer) {
+        static void read(std::vector<T, Allocator> &value, const H5BufferConstView &buffer) {
             value.reserve(buffer.size());
-            for (ConstH5BufferView element : buffer)
+            for (H5BufferConstView element : buffer)
                 value.emplace_back(BufferConstructTraits<T>::construct(element));
         }
     };

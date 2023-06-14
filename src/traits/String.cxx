@@ -7,7 +7,7 @@ namespace H5Composites {
         return H5::StrType(H5::PredType::C_S1, H5T_VARIABLE);
     }
 
-    void BufferReadTraits<std::string>::read(std::string &value, const ConstH5BufferView &buffer) {
+    void BufferReadTraits<std::string>::read(std::string &value, const H5BufferConstView &buffer) {
         detail::ReadConversionHelper helper(buffer, getH5DType(value));
         // Internal storage for a VL string is a pointer to char *
         const char *const *data = helper.buffer().as<const char *>();

@@ -1,7 +1,7 @@
 #ifndef H5COMPOSITES_DTYPECONVERSION_HXX
 #define H5COMPOSITES_DTYPECONVERSION_HXX
 
-#include "H5Composites/ConstH5BufferView.hxx"
+#include "H5Composites/H5BufferConstView.hxx"
 #include "H5Composites/H5Buffer.hxx"
 
 #include <map>
@@ -58,7 +58,7 @@ namespace H5Composites {
      * The returned buffer will be the same size as targetDType.getSize()
      */
     H5Buffer convert(
-            const ConstH5BufferView &source, const H5::DataType &targetDType,
+            const H5BufferConstView &source, const H5::DataType &targetDType,
             const ConversionCriteria &criteria = {});
 } // namespace H5Composites
 

@@ -1,5 +1,7 @@
 #include "H5Composites/H5BufferView.hxx"
 
+#include <stdexcept>
+
 namespace {
     void *offsetPtr(void *ptr, std::size_t step) {
         return reinterpret_cast<std::byte *>(ptr) + step;
@@ -75,14 +77,14 @@ namespace H5Composites {
     }
 
     H5BufferView::H5BufferView(void *buffer, const H5::DataType &dtype)
-            : ConstH5BufferView(buffer, dtype) {}
+            : H5BufferConstView(buffer, dtype) {}
 
     H5BufferView::H5BufferView(H5BufferView &other) : H5BufferView(other.get(), other.dtype()) {}
 
-    void *H5BufferView::get() { return const_cast<void *>(ConstH5BufferView::get()); }
+    void *H5BufferView::get() { return const_cast<void *>(H5BufferConstView::get()); }
 
     void *H5BufferView::getOffset(std::size_t offset) {
-        return const_cast<void *>(ConstH5BufferView::getOffset(offset));
+        return const_cast<void *>(H5BufferConstView::getOffset(offset));
     }
 
     H5BufferView::iterator H5BufferView::begin() { return iterator(indexer(), 0); }
@@ -98,7 +100,7 @@ namespace H5Composites {
     }
 
     H5BufferView::Indexer H5BufferView::indexer() {
-        auto indexer = ConstH5BufferView::indexer();
+        auto indexer = H5BufferConstView::indexer();
         return {.n = indexer.n,
                 .buffer = const_cast<void *>(indexer.buffer),
                 .dtype = indexer.dtype};

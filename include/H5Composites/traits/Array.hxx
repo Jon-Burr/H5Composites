@@ -51,11 +51,11 @@ namespace H5Composites {
         requires(!BufferReadIsCopy<T>)
     struct BufferReadTraits<std::array<T, N>> {
         static void read(
-                std::array<UnderlyingType_t<T>, N> &value, const ConstH5BufferView &buffer) {
+                std::array<UnderlyingType_t<T>, N> &value, const H5BufferConstView &buffer) {
             if (buffer.size() != N)
                 throw InvalidConversionErrror(getH5DType(value), buffer.dtype());
             auto arrayItr = value.begin();
-            for (ConstH5BufferView element : buffer)
+            for (H5BufferConstView element : buffer)
                 BufferReadTraits<T>::read(*arrayItr++, element);
         }
     };

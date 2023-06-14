@@ -14,7 +14,7 @@ namespace H5Composites {
     H5Buffer::H5Buffer(const H5::DataType &dtype)
             : H5BufferView(nullptr, dtype), m_buffer(dtype.getSize()),
               m_vlenDeleter(m_buffer.get(), dtype) {
-        ConstH5BufferView::m_buffer = m_buffer.get();
+        H5BufferConstView::m_buffer = m_buffer.get();
     }
 
     H5Buffer::H5Buffer(void *buffer, const H5::DataType &dtype)
@@ -31,7 +31,7 @@ namespace H5Composites {
     }
 
     H5Buffer &H5Buffer::operator=(H5Buffer &&other) {
-        ConstH5BufferView::m_buffer = other.get();
+        H5BufferConstView::m_buffer = other.get();
         m_dtype = other.dtype();
         m_vlenDeleter = std::move(other.m_vlenDeleter);
         m_buffer = std::move(other.m_buffer);

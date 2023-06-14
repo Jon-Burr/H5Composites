@@ -7,10 +7,10 @@
 #ifndef H5COMPOSITES_H5BUFFERVIEW_HXX
 #define H5COMPOSITES_H5BUFFERVIEW_HXX
 
-#include "H5Composites/ConstH5BufferView.hxx"
+#include "H5Composites/H5BufferConstView.hxx"
 
 namespace H5Composites {
-    class H5BufferView : public ConstH5BufferView {
+    class H5BufferView : public H5BufferConstView {
     public:
         /// Helper struct to aid in extracting elements by index
         struct Indexer {
@@ -62,7 +62,7 @@ namespace H5Composites {
             std::size_t m_idx;
         };
 
-        using const_iterator = ConstH5BufferView::iterator;
+        using const_iterator = H5BufferConstView::iterator;
 
         /// @brief Default constructor creates an invalid view
         H5BufferView() = default;
@@ -77,7 +77,7 @@ namespace H5Composites {
 
         /// The memory buffer
         void *get();
-        using ConstH5BufferView::get;
+        using H5BufferConstView::get;
 
         /// @brief Interpret the memory buffer as the specified type
         ///
@@ -87,18 +87,18 @@ namespace H5Composites {
                 throw std::out_of_range(std::to_string(sizeof(T)));
             return reinterpret_cast<T *>(get());
         }
-        using ConstH5BufferView::as;
+        using H5BufferConstView::as;
 
         /// @brief Get (const) access to the buffer with a byte offset
         /// @param offset The number of bytes to offset
         void *getOffset(std::size_t offset);
-        using ConstH5BufferView::getOffset;
+        using H5BufferConstView::getOffset;
 
         iterator begin();
-        using ConstH5BufferView::begin;
+        using H5BufferConstView::begin;
 
         iterator end();
-        using ConstH5BufferView::end;
+        using H5BufferConstView::end;
 
         /// @brief Get a view on the member at the specified index
         ///
@@ -114,10 +114,10 @@ namespace H5Composites {
         ///
         /// @param name The name of the member
         H5BufferView operator[](const std::string &name);
-        using ConstH5BufferView::operator[];
+        using H5BufferConstView::operator[];
 
         Indexer indexer();
-        using ConstH5BufferView::indexer;
+        using H5BufferConstView::indexer;
 
     }; //> end class H5BufferView
 } // namespace H5Composites

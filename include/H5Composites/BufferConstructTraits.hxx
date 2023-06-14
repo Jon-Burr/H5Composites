@@ -2,26 +2,26 @@
 #define H5COMPOSITES_BUFFERCONSTRUCTTRAITS_HXX
 
 #include "H5Composites/BufferReadTraits.hxx"
-#include "H5Composites/ConstH5BufferView.hxx"
+#include "H5Composites/H5BufferConstView.hxx"
 
 #include <concepts>
 
 namespace H5Composites {
     /// Whether or not a type is constructible from a buffer and a data type
     template <typename T>
-    concept BufferConstructibleType = std::constructible_from<T, const ConstH5BufferView &>;
+    concept BufferConstructibleType = std::constructible_from<T, const H5BufferConstView &>;
 
     template <typename T> struct BufferConstructTraits;
 
     template <typename T>
-    concept BufferConstructible = requires(const ConstH5BufferView &view) {
+    concept BufferConstructible = requires(const H5BufferConstView &view) {
         { BufferConstructTraits<T>::construct(view) } -> std::convertible_to<UnderlyingType_t<T>>;
     };
 
     template <typename T>
         requires BufferConstructibleType<UnderlyingType_t<T>>
     struct BufferConstructTraits<T> {
-        static UnderlyingType_t<T> construct(const ConstH5BufferView &view) {
+        static UnderlyingType_t<T> construct(const H5BufferConstView &view) {
             return UnderlyingType_t<T>(view);
         }
     };
@@ -30,7 +30,7 @@ namespace H5Composites {
         requires BufferReadable<T> &&
                  (!BufferConstructibleType<UnderlyingType_t<T>>) && std::default_initializable<T>
     struct BufferConstructTraits<T> {
-        static UnderlyingType_t<T> construct(const ConstH5BufferView &view) {
+        static UnderlyingType_t<T> construct(const H5BufferConstView &view) {
             UnderlyingType_t<T> value;
             BufferReadTraits<T>::read(value, view);
             return value;
@@ -38,7 +38,7 @@ namespace H5Composites {
     };
 
     template <BufferConstructible T>
-    UnderlyingType_t<T> fromBuffer(const ConstH5BufferView &buffer) {
+    UnderlyingType_t<T> fromBuffer(const H5BufferConstView &buffer) {
         return BufferConstructTraits<T>::construct(buffer);
     }
 

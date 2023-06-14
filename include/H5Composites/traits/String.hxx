@@ -11,7 +11,7 @@ namespace H5Composites {
     };
 
     template <> struct BufferReadTraits<std::string> {
-        static void read(std::string &value, const ConstH5BufferView &buffer);
+        static void read(std::string &value, const H5BufferConstView &buffer);
     };
 
     template <> struct BufferWriteTraits<std::string> {

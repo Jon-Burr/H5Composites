@@ -162,7 +162,7 @@ namespace H5Composites {
               target(target), criteria(criteria) {}
 
     H5Buffer convert(
-            const ConstH5BufferView &source, const H5::DataType &targetDType,
+            const H5BufferConstView &source, const H5::DataType &targetDType,
             const ConversionCriteria &criteria) {
         std::string error;
         if (!checkConversion(source.dtype(), targetDType).check(error, criteria))

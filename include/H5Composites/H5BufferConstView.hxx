@@ -1,5 +1,5 @@
 /**
- * @file ConstH5BufferView.hxx
+ * @file H5BufferConstView.hxx
  * @author Jon Burr
  * @brief Pointer to const memory including the H5 data type container
  */
@@ -10,11 +10,12 @@
 #include "H5Cpp.h"
 
 #include <compare>
+#include <stdexcept>
 #include <string>
 #include <variant>
 
 namespace H5Composites {
-    class ConstH5BufferView {
+    class H5BufferConstView {
         friend class H5Buffer;
 
     public:
@@ -27,7 +28,7 @@ namespace H5Composites {
             // Otherwise the H5::DataType variant is filled and it is the element type
             std::variant<H5::DataType, H5::CompType> dtype;
 
-            ConstH5BufferView operator[](std::size_t idx) const;
+            H5BufferConstView operator[](std::size_t idx) const;
 
             friend bool operator==(const Indexer &, const Indexer &) = default;
             friend bool operator!=(const Indexer &, const Indexer &) = default;
@@ -36,8 +37,8 @@ namespace H5Composites {
         class iterator {
         public:
             using difference_type = std::ptrdiff_t;
-            using value_type = ConstH5BufferView;
-            using reference = ConstH5BufferView;
+            using value_type = H5BufferConstView;
+            using reference = H5BufferConstView;
             using iterator_category = std::input_iterator_tag;
             /// @brief Default constructor creates a generic past-the end cosntructor
             iterator();
@@ -69,16 +70,16 @@ namespace H5Composites {
         };
 
         /// @brief Default constructor creates an invalid view
-        ConstH5BufferView() = default;
+        H5BufferConstView() = default;
 
         /// @brief Create the view
         /// @param buffer The buffer containing the data
         /// @param dtype The type held in the buffer
-        ConstH5BufferView(const void *buffer, const H5::DataType &dtype);
+        H5BufferConstView(const void *buffer, const H5::DataType &dtype);
 
-        ConstH5BufferView(const ConstH5BufferView &other) = default;
+        H5BufferConstView(const H5BufferConstView &other) = default;
 
-        ConstH5BufferView &operator=(const ConstH5BufferView &other) = delete;
+        H5BufferConstView &operator=(const H5BufferConstView &other) = delete;
 
         /// Whether the view points to memory
         explicit operator bool() const { return m_buffer; }
@@ -123,14 +124,14 @@ namespace H5Composites {
         /// exception on scalar types
         ///
         /// @param idx The index
-        ConstH5BufferView operator[](std::size_t idx) const;
+        H5BufferConstView operator[](std::size_t idx) const;
 
         /// @brief Get a view on the member with the specfied name
         ///
         /// If the data type is not a CompType then an exception is raised.
         ///
         /// @param name The name of the member
-        ConstH5BufferView operator[](const std::string &name) const;
+        H5BufferConstView operator[](const std::string &name) const;
 
         /// @brief Get the indexer helper
         ///

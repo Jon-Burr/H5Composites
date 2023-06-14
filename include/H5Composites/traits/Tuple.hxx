@@ -64,11 +64,11 @@ namespace H5Composites {
     template <BufferConstructible... Ts> struct BufferConstructTraits<std::tuple<Ts...>> {
         template <std::size_t... Is>
         static std::tuple<UnderlyingType_t<Ts>...> constructImpl(
-                const ConstH5BufferView &buffer, std::index_sequence<Is...>) {
+                const H5BufferConstView &buffer, std::index_sequence<Is...>) {
             return std::make_tuple(BufferConstructTraits<Ts>::construct(buffer[Is])...);
         }
 
-        static std::tuple<UnderlyingType_t<Ts>...> construct(const ConstH5BufferView &buffer) {
+        static std::tuple<UnderlyingType_t<Ts>...> construct(const H5BufferConstView &buffer) {
             return constructImpl(buffer, std::make_index_sequence<sizeof...(Ts)>());
         }
     };
@@ -76,13 +76,13 @@ namespace H5Composites {
     template <BufferReadable... Ts> struct BufferReadTraits<std::tuple<Ts...>> {
         template <std::size_t... Is>
         static void readImpl(
-                std::tuple<UnderlyingType_t<Ts>...> &value, const ConstH5BufferView &buffer,
+                std::tuple<UnderlyingType_t<Ts>...> &value, const H5BufferConstView &buffer,
                 std::index_sequence<Is...>) {
             (..., BufferReadTraits<Ts>::read(std::get<Is>(value), buffer[Is]));
         }
 
         static void read(
-                std::tuple<UnderlyingType_t<Ts>...> &value, const ConstH5BufferView &buffer) {
+                std::tuple<UnderlyingType_t<Ts>...> &value, const H5BufferConstView &buffer) {
             readImpl(value, buffer, std::make_index_sequence<sizeof...(Ts)>());
         }
     };

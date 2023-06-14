@@ -72,7 +72,7 @@ namespace H5Composites {
     };
 
     template <std::size_t N> struct BufferReadTraits<std::bitset<N>> {
-        static void read(std::bitset<N> &value, const ConstH5BufferView &buffer) {
+        static void read(std::bitset<N> &value, const H5BufferConstView &buffer) {
             using store_t = std::conditional_t<N <= 32, unsigned long, unsigned long long>;
             // read the bitset as if it were the underlying integer type and let C++ and H5 handle
             // conversions

@@ -1,6 +1,9 @@
-#include "H5Composites/ConstH5BufferView.hxx"
+#include "H5Composites/H5BufferConstView.hxx"
 #include "H5Composites/ArrayDTypeUtils.hxx"
 #include "H5Composites/DTypePrinting.hxx"
+
+#include <cstring>
+#include <tuple>
 
 namespace {
     const void *offsetPtr(const void *ptr, std::size_t step) {
@@ -10,7 +13,7 @@ namespace {
 
 namespace H5Composites {
 
-    ConstH5BufferView ConstH5BufferView::Indexer::operator[](std::size_t idx) const {
+    H5BufferConstView H5BufferConstView::Indexer::operator[](std::size_t idx) const {
         if (idx >= n)
             throw std::out_of_range(std::to_string(idx));
         if (dtype.index() == 1)
@@ -20,69 +23,69 @@ namespace H5Composites {
             return {offsetPtr(buffer, std::get<0>(dtype).getSize() * idx), std::get<0>(dtype)};
     }
 
-    ConstH5BufferView::iterator::iterator()
+    H5BufferConstView::iterator::iterator()
             : m_indexer{.n = SIZE_MAX, .buffer = nullptr}, m_idx(SIZE_MAX) {}
 
-    ConstH5BufferView::iterator::iterator(const Indexer &indexer)
+    H5BufferConstView::iterator::iterator(const Indexer &indexer)
             : m_indexer(indexer), m_idx(indexer.n) {}
 
-    ConstH5BufferView::iterator::iterator(const Indexer &indexer, std::size_t idx)
+    H5BufferConstView::iterator::iterator(const Indexer &indexer, std::size_t idx)
             : m_indexer(indexer), m_idx(idx) {}
 
-    ConstH5BufferView ConstH5BufferView::iterator::operator*() const { return m_indexer[m_idx]; }
+    H5BufferConstView H5BufferConstView::iterator::operator*() const { return m_indexer[m_idx]; }
 
-    ConstH5BufferView::iterator &ConstH5BufferView::iterator::operator++() {
+    H5BufferConstView::iterator &H5BufferConstView::iterator::operator++() {
         ++m_idx;
         return *this;
     }
 
-    ConstH5BufferView::iterator ConstH5BufferView::iterator::operator++(int) {
+    H5BufferConstView::iterator H5BufferConstView::iterator::operator++(int) {
         iterator copy(*this);
         ++m_idx;
         return copy;
     }
 
-    ConstH5BufferView::iterator &ConstH5BufferView::iterator::operator--() {
+    H5BufferConstView::iterator &H5BufferConstView::iterator::operator--() {
         --m_idx;
         return *this;
     }
 
-    ConstH5BufferView::iterator ConstH5BufferView::iterator::operator--(int) {
+    H5BufferConstView::iterator H5BufferConstView::iterator::operator--(int) {
 
         iterator copy(*this);
         --m_idx;
         return copy;
     }
 
-    ConstH5BufferView::iterator &ConstH5BufferView::iterator::operator+=(std::ptrdiff_t step) {
+    H5BufferConstView::iterator &H5BufferConstView::iterator::operator+=(std::ptrdiff_t step) {
         m_idx += step;
         return *this;
     }
 
-    ConstH5BufferView::iterator &ConstH5BufferView::iterator::operator-=(std::ptrdiff_t step) {
+    H5BufferConstView::iterator &H5BufferConstView::iterator::operator-=(std::ptrdiff_t step) {
         m_idx -= step;
         return *this;
     }
 
-    ConstH5BufferView::iterator operator+(
-            const ConstH5BufferView::iterator &itr, std::ptrdiff_t step) {
-        return ConstH5BufferView::iterator(itr.m_indexer, itr.m_idx + step);
+    H5BufferConstView::iterator operator+(
+            const H5BufferConstView::iterator &itr, std::ptrdiff_t step) {
+        return H5BufferConstView::iterator(itr.m_indexer, itr.m_idx + step);
     }
 
-    ConstH5BufferView::iterator operator+(
-            std::ptrdiff_t step, const ConstH5BufferView::iterator &itr) {
-        return ConstH5BufferView::iterator(itr.m_indexer, itr.m_idx + step);
+    H5BufferConstView::iterator operator+(
+            std::ptrdiff_t step, const H5BufferConstView::iterator &itr) {
+        return H5BufferConstView::iterator(itr.m_indexer, itr.m_idx + step);
     }
 
-    ConstH5BufferView::iterator operator-(
-            const ConstH5BufferView::iterator &itr, std::ptrdiff_t step) {
-        return ConstH5BufferView::iterator(itr.m_indexer, itr.m_idx - step);
+    H5BufferConstView::iterator operator-(
+            const H5BufferConstView::iterator &itr, std::ptrdiff_t step) {
+        return H5BufferConstView::iterator(itr.m_indexer, itr.m_idx - step);
     }
 
-    ConstH5BufferView::ConstH5BufferView(const void *buffer, const H5::DataType &dtype)
+    H5BufferConstView::H5BufferConstView(const void *buffer, const H5::DataType &dtype)
             : m_buffer(buffer), m_dtype(dtype) {}
 
-    std::size_t ConstH5BufferView::size() const {
+    std::size_t H5BufferConstView::size() const {
         if (dtype().getId() == -1)
             return 0;
         switch (dtype().getClass()) {
@@ -99,12 +102,12 @@ namespace H5Composites {
             return getArrayDims(dtype().getId()).front();
         default:
             throw H5::DataTypeIException(
-                    "ConstH5BufferView::size", toString(dtype()) + " is a scalar type");
+                    "H5BufferConstView::size", toString(dtype()) + " is a scalar type");
             return 1;
         }
     }
 
-    bool ConstH5BufferView::isScalar() const {
+    bool H5BufferConstView::isScalar() const {
         switch (dtype().getClass()) {
         case H5T_STRING:
         case H5T_COMPOUND:
@@ -116,27 +119,27 @@ namespace H5Composites {
         }
     }
 
-    ConstH5BufferView::iterator ConstH5BufferView::begin() const { return iterator(indexer(), 0); }
+    H5BufferConstView::iterator H5BufferConstView::begin() const { return iterator(indexer(), 0); }
 
-    ConstH5BufferView::iterator ConstH5BufferView::end() const { return iterator(indexer()); }
+    H5BufferConstView::iterator H5BufferConstView::end() const { return iterator(indexer()); }
 
-    const void *ConstH5BufferView::getOffset(std::size_t offset) const {
+    const void *H5BufferConstView::getOffset(std::size_t offset) const {
         if (offset >= footprint())
             throw std::out_of_range(std::to_string(offset));
         return offsetPtr(m_buffer, offset);
     }
 
-    ConstH5BufferView ConstH5BufferView::operator[](std::size_t idx) const {
+    H5BufferConstView H5BufferConstView::operator[](std::size_t idx) const {
         return indexer()[idx];
     }
 
-    ConstH5BufferView ConstH5BufferView::operator[](const std::string &name) const {
+    H5BufferConstView H5BufferConstView::operator[](const std::string &name) const {
         H5::CompType compDType(dtype().getId());
         std::size_t idx = compDType.getMemberIndex(name);
         return {getOffset(compDType.getMemberOffset(idx)), compDType.getMemberDataType(idx)};
     }
 
-    ConstH5BufferView::Indexer ConstH5BufferView::indexer() const {
+    H5BufferConstView::Indexer H5BufferConstView::indexer() const {
         Indexer i;
         switch (dtype().getClass()) {
         case H5T_STRING:
@@ -170,7 +173,7 @@ namespace H5Composites {
             break;
         default:
             throw H5::DataTypeIException(
-                    "ConstH5BufferView::indexer", toString(dtype()) + " is a scalar type");
+                    "H5BufferConstView::indexer", toString(dtype()) + " is a scalar type");
         }
         return i;
     }
