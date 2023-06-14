@@ -50,7 +50,10 @@ namespace H5Composites {
         }
     };
 
-    template <WithStaticH5DType T> auto getH5DType() { return H5DType<T>::getType(); }
+    template <WithStaticH5DType T> auto getH5DType() {
+        static auto dtype = H5DType<T>::getType();
+        return dtype;
+    }
     template <WithStaticH5DType T>
         requires(!WrapperTrait<T>)
     auto getH5DType(const T &) {
