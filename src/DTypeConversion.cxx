@@ -167,7 +167,7 @@ namespace H5Composites {
         std::string error;
         if (!checkConversion(source.dtype(), targetDType).check(error, criteria))
             throw InvalidConversionError(source.dtype(), targetDType, criteria);
-        std::size_t size = std::max(source.size(), targetDType.getSize());
+        std::size_t size = std::max(source.footprint(), targetDType.getSize());
         H5T_cdata_t *cdata{nullptr};
         source.dtype().find(targetDType, &cdata);
         if (!cdata)
@@ -179,7 +179,7 @@ namespace H5Composites {
             background = SmartBuffer(size, 0);
         SmartBuffer buffer(size);
         // Copy the source data into the buffer
-        std::memcpy(buffer.get(), source.get(), source.size());
+        std::memcpy(buffer.get(), source.get(), source.footprint());
         source.dtype().convert(targetDType, 1, buffer.get(), background.get());
         if (targetDType.getSize() < size)
             buffer.resize(targetDType.getSize());
