@@ -4,6 +4,7 @@ find_package(Boost)
 add_library(H5Composites SHARED)
 target_sources(H5Composites
     PRIVATE
+    traits/FixedLengthString.cxx
     traits/String.cxx
     ArrayDTypeUtils.cxx
     CompDTypeUtils.cxx
@@ -18,7 +19,7 @@ target_sources(H5Composites
     H5DType.cxx
     H5Enum.cxx
     SmartBuffer.cxx
-    VLenCopier.cxx
+    TypeRegister.cxx
     VLenDeleter.cxx
     Writer.cxx
 )

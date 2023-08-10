@@ -165,12 +165,20 @@ namespace H5Composites {
     H5Buffer convert(
             const H5BufferConstView &source, const H5::DataType &targetDType,
             const ConversionCriteria &criteria) {
+        H5Buffer target(targetDType);
+        convert(source, target, criteria);
+        return target;
+    }
+
+    void convert(
+            const H5BufferConstView &source, H5BufferView target,
+            const ConversionCriteria &criteria) {
         std::string error;
-        if (!checkConversion(source.dtype(), targetDType).check(error, criteria))
-            throw InvalidConversionError(source.dtype(), targetDType, criteria);
-        std::size_t size = std::max(source.footprint(), targetDType.getSize());
+        if (!checkConversion(source.dtype(), target.dtype()).check(error, criteria))
+            throw InvalidConversionError(source.dtype(), target.dtype(), criteria);
+        std::size_t size = std::max(source.footprint(), target.footprint());
         H5T_cdata_t *cdata{nullptr};
-        source.dtype().find(targetDType, &cdata);
+        source.dtype().find(target.dtype(), &cdata);
         if (!cdata)
             // This is just to be *very* safe. The underlying H5 implementation should throw on the
             // above call
@@ -178,13 +186,17 @@ namespace H5Composites {
         SmartBuffer background;
         if (cdata->need_bkg != H5T_BKG_NO)
             background = SmartBuffer(size, 0);
-        SmartBuffer buffer(size);
-        // Copy the source data into the buffer
-        std::memcpy(buffer.get(), source.get(), source.footprint());
-        source.dtype().convert(targetDType, 1, buffer.get(), background.get());
-        if (targetDType.getSize() < size)
-            buffer.resize(targetDType.getSize());
-        return H5Buffer(std::move(buffer), targetDType);
+        if (target.footprint() >= source.footprint()) {
+            // Simple - no need to create a temporary buffer
+            std::memcpy(target.get(), source.get(), source.footprint());
+            source.dtype().convert(target.dtype(), 1, target.get(), background.get());
+        } else {
+            SmartBuffer buffer(size);
+            // Copy the source data into the buffer
+            std::memcpy(buffer.get(), source.get(), source.footprint());
+            source.dtype().convert(target.dtype(), 1, buffer.get(), background.get());
+            std::memcpy(target.get(), buffer.get(), target.footprint());
+        }
     }
 
 } // namespace H5Composites

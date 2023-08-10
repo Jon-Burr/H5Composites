@@ -1,14 +1,10 @@
-#include "H5Composites/TypeRegister.h"
-#include "H5Composites/BufferReadTraits.h"
-#include "H5Composites/BufferWriteTraits.h"
-#include "H5Composites/DTypes.h"
-
-#include <algorithm>
+#include "H5Composites/TypeRegister.hxx"
+#include "H5Composites/BufferConstructTraits.hxx"
 
 namespace H5Composites {
     TypeRegister &TypeRegister::instance() {
-        static TypeRegister theInstance;
-        return theInstance;
+        static TypeRegister instance;
+        return instance;
     }
 
     TypeRegister::id_t TypeRegister::registerType(const std::string &name) {
@@ -16,7 +12,7 @@ namespace H5Composites {
             throw std::runtime_error("Cannot modify locked register");
         if (m_ids.count(name))
             throw std::invalid_argument("Cannot re-register type '" + name + "'!");
-        H5COMPOSITES_IDTYPE newID = m_currentID++;
+        H5COMPOSITES_IDTYPE newID = m_ids.size();
         m_ids[name] = {newID};
         return {newID};
     }
@@ -64,40 +60,23 @@ namespace H5Composites {
         return *m_dtype;
     }
 
-    bool operator==(TypeRegister::id_t lhs, TypeRegister::id_t rhs) {
-        return lhs.value == rhs.value;
-    }
-
-    bool operator!=(TypeRegister::id_t lhs, TypeRegister::id_t rhs) {
-        return lhs.value != rhs.value;
-    }
-
-    bool operator<(TypeRegister::id_t lhs, TypeRegister::id_t rhs) { return lhs.value < rhs.value; }
-
-    H5::DataType H5DType<TypeRegister::id_t>::getType() {
+    H5::EnumType H5DType<TypeRegister::id_t>::getType() {
         return TypeRegister::instance().enumType();
     }
 
-    TypeRegister::id_t BufferReadTraits<TypeRegister::id_t>::read(
-            const void *buffer, const H5::DataType &dtype) {
-        H5::DataType targetDType = getH5DType<TypeRegister::id_t>();
-        H5Buffer tmp;
-        if (targetDType != dtype) {
-            tmp = convert(buffer, dtype, targetDType);
-            buffer = tmp.get();
-        }
-        return {fromBuffer<H5COMPOSITES_IDTYPE>(buffer, targetDType.getSuper())};
+    void BufferReadTraits<TypeRegister::id_t>::read(
+            TypeRegister::id_t &value, const H5BufferConstView &buffer) {
+        detail::ReadConversionHelper helper(buffer, getH5DType<TypeRegister::id_t>());
+        fromBuffer(value.value, helper.buffer());
     }
 
     void BufferWriteTraits<TypeRegister::id_t>::write(
-            const TypeRegister::id_t &value, void *buffer, const H5::DataType &dtype) {
+            TypeRegister::id_t value, H5BufferView buffer) {
         H5::DataType sourceDType = getH5DType<TypeRegister::id_t>();
-        if (sourceDType == dtype) {
-            std::memcpy(buffer, &value.value, sizeof(value.value));
-        } else {
-            H5Buffer tmp = convert(&value.value, sourceDType, dtype);
-            std::memcpy(buffer, tmp.get(), dtype.getSize());
-            tmp.transferVLenOwnership().release();
-        }
+        if (sourceDType == buffer.dtype())
+            std::memcpy(buffer.get(), &value.value, sizeof(value.value));
+        else
+            convert(H5BufferConstView(&value.value, sourceDType), buffer);
     }
+
 } // namespace H5Composites

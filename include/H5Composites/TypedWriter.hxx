@@ -9,17 +9,17 @@
  *
  */
 
-#ifndef H5COMPOSITES_TYPEDWRITER_H
-#define H5COMPOSITES_TYPEDWRITER_H
+#ifndef H5COMPOSITES_TYPEDWRITER_HXX
+#define H5COMPOSITES_TYPEDWRITER_HXX
 
-#include "H5Composites/DTypes.h"
-#include "H5Composites/Writer.h"
+#include "H5Composites/H5DType.hxx"
+#include "H5Composites/Writer.hxx"
+
+#include <concepts>
 
 namespace H5Composites {
-    template <typename T> class TypedWriter : public Writer {
-        static_assert(
-                has_static_h5dtype_v<T>, "Writers are only valid for types with a static dtype");
-
+    template <WithStaticH5DType T> class TypedWriter : public Writer {
+        
     public:
         /**
          * @brief Construct a new Writer object
@@ -37,11 +37,12 @@ namespace H5Composites {
 
         void write(const UnderlyingType_t<T> &obj) { Writer::write<T>(obj); }
 
-        template <typename Iterator> void write(Iterator begin, Iterator end) {
+        template <std::input_iterator Iterator> requires (std::convertible_to<std::iter_value_t<Iterator>, T>)
+        void write(Iterator begin, Iterator end) {
             for (Iterator itr = begin; itr != end; ++itr)
                 write(*itr);
         }
     };
 } // namespace H5Composites
 
-#endif //> !H5COMPOSITES_TYPEDWRITER_H
+#endif //> !H5COMPOSITES_TYPEDWRITER_HXX

@@ -12,8 +12,8 @@
 #ifndef H5COMPOSITES_BUFFERREADTRAITS_HXX
 #define H5COMPOSITES_BUFFERREADTRAITS_HXX
 
-#include "H5Composites/H5BufferConstView.hxx"
 #include "H5Composites/DTypeConversion.hxx"
+#include "H5Composites/H5BufferConstView.hxx"
 #include "H5Composites/H5DType.hxx"
 #include "H5Composites/UnderlyingType.hxx"
 #include "H5Composites/concepts.hxx"
@@ -75,7 +75,7 @@ namespace H5Composites {
         static constexpr inline bool memcpy = true;
 
         static void read(UnderlyingType_t<T> &t, const H5BufferConstView &buffer) {
-            detail::ReadConversionHelper helper(buffer, getH5DType<T>);
+            detail::ReadConversionHelper helper(buffer, getH5DType<T>());
             t = *reinterpret_cast<const UnderlyingType_t<T> *>(helper.buffer().get());
         }
     };
