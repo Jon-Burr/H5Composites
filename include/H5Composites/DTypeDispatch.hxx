@@ -58,6 +58,17 @@ struct functor_result<false, F, T, Args...> : public detail::invalid_functor_res
 template <bool C, template <typename> typename F, typename T, typename... Args>
 using functor_result_t = typename functor_result<C, F, T, Args...>::type;
 
+template <typename... Types> struct DispatchHelper {
+    template <template <typename> typename C, template <typename> typename F, typename... Args>
+    using dispatch_result_t =
+            std::common_type_t<functor_result_t<C<Types>::value, F, Types, Args...>...>;
+};
+
+using PredDispatchHelper = DispatchHelper<
+        bool, int, unsigned int, char, signed char, unsigned char, short, unsigned short, long,
+        long long, unsigned long, unsigned long long, float, double, std::bitset<8>,
+        std::bitset<16>, std::bitset<32>, std::bitset<64>>;
+
 template <template <typename> typename C, template <typename> typename F, typename... Args>
 using dispatch_result_t = std::common_type_t<
         functor_result_t<C<bool>::value, F, bool, Args...>,

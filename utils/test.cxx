@@ -20,6 +20,12 @@ namespace {
         }
         return ss.str();
     }
+
+    template <std::ranges::range Range>
+        requires(!std::same_as<Range, std::string>)
+    std::ostream &operator<<(std::ostream &os, Range r) {
+        return os;
+    }
 } // namespace
 
 int main() {

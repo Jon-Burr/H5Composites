@@ -1,21 +1,30 @@
 #include "H5Composites/H5Enum.hxx"
+#include "H5Composites/DTypePrinting.hxx"
 #include "H5Composites/H5Buffer.hxx"
 
 #include <stdexcept>
 
 namespace H5Composites {
+    std::string getEnumName(const H5BufferConstView &buffer, std::size_t startSize) {
+        if (buffer.dtype().getClass() != H5T_ENUM)
+            throw H5::DataTypeIException(
+                    "H5Composites::getEnumName", toString(buffer.dtype()) + " is not an enum");
+        H5::EnumType dtype = buffer.dtype().getId();
+        std::string name;
+        void *value = const_cast<void *>(buffer.get());
+        do {
+            name = dtype.nameOf(value, startSize);
+        } while (name.size() == startSize);
+        return name;
+    }
+
     std::string getEnumNameByIndex(
             const H5::EnumType &dtype, std::size_t idx, std::size_t startSize) {
         if (startSize == 0)
             throw std::invalid_argument("Space allocated for the name must be larger than 0!");
-        H5Buffer buffer(dtype.getSuper());
+        H5Buffer buffer(dtype);
         dtype.getMemberValue(idx, buffer.get());
-        std::string name = dtype.nameOf(buffer.get(), startSize);
-        while (name.size() == startSize) {
-            startSize *= 2;
-            name = dtype.nameOf(buffer.get(), startSize);
-        }
-        return name;
+        return getEnumName(buffer);
     }
 
     std::vector<std::string> getEnumNames(const H5::EnumType &dtype, std::size_t startSize) {

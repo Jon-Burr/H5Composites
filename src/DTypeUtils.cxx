@@ -10,6 +10,7 @@
  */
 
 #include "H5Composites/DTypeUtils.hxx"
+#include <algorithm>
 
 namespace H5Composites {
     const std::vector<H5::PredType> &nativePredefinedDTypes() {

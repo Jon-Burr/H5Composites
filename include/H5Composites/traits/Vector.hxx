@@ -17,7 +17,10 @@ namespace H5Composites {
     };
 
     template <WithStaticH5DType T, typename Allocator> struct H5DType<std::vector<T, Allocator>> {
-        static H5::VarLenType getType() { return H5::VarLenType(getH5DType<T>()); }
+        static H5::VarLenType getType() {
+            H5::DataType super = getH5DType<T>();
+            return H5::VarLenType(&super);
+        }
     };
 
     template <WithStaticH5DType T, typename Allocator>

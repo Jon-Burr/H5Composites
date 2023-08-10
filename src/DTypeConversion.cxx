@@ -5,6 +5,7 @@
 #include "H5Composites/DTypeUtils.hxx"
 
 #include <cstring>
+#include <optional>
 
 namespace {
     using namespace H5Composites;

@@ -16,6 +16,7 @@
 #include <compare>
 #include <map>
 #include <memory>
+#include <optional>
 #include <set>
 #include <vector>
 

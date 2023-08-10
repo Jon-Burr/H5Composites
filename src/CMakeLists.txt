@@ -20,6 +20,7 @@ target_sources(H5Composites
     SmartBuffer.cxx
     VLenCopier.cxx
     VLenDeleter.cxx
+    Writer.cxx
 )
 target_include_directories(H5Composites
     PUBLIC ../include ${HDF5_INCLUDE_DIRS}

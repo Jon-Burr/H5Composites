@@ -3,10 +3,14 @@
 
 #include "H5Cpp.h"
 
+#include "H5Composites/H5BufferConstView.hxx"
+
 #include <string>
 #include <vector>
 
 namespace H5Composites {
+    std::string getEnumName(const H5BufferConstView &buffer, std::size_t startSize = 128);
+
     /**
      * @brief Get the name of a particular index in an enum type
      *
