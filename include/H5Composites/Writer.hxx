@@ -1,23 +1,23 @@
 /**
- * @file Writer.h
+ * @file Writer.hxx
  * @author Jon Burr
  * @brief Class for writing one-dimensional extendable datasets
  * @version 0.0.0
- * @date 2022-01-06
+ * @date 2023-08-09
  *
- * @copyright Copyright (c) 2022
+ * @copyright Copyright (c) 2023
  *
  */
 
-#ifndef H5COMPOSITES_WRITER_H
-#define H5COMPOSITES_WRITER_H
+#ifndef H5COMPOSITES_WRITER_HXX
+#define H5COMPOSITES_WRITER_HXX
 
-#include "H5Composites/DTypes.h"
-#include "H5Composites/H5Buffer.h"
-#include "H5Composites/SmartBuffer.h"
+#include "H5Composites/BufferWriteTraits.hxx"
+#include "H5Composites/H5BufferConstView.hxx"
+#include "H5Composites/SmartBuffer.hxx"
+#include "H5Composites/UnderlyingType.hxx"
 
-#include <string>
-#include <vector>
+#include "H5Cpp.h"
 
 namespace H5Composites {
     class Writer {
@@ -66,26 +66,28 @@ namespace H5Composites {
         std::size_t nInBuffer() const { return m_nInBuffer; }
 
         /// The buffer
-        const void *buffer() const { return m_buffer.get(); }
-
-        /**
-         * @brief Write an object contained in a buffer
-         * @param buffer The memory containing the object
-         * @param dtype The type contained in buffer
-         */
-        void writeFromBuffer(const H5::DataType &dtype, const void *buffer);
-
+        H5BufferConstView buffer() const;
         /**
          * @brief Write an object contained in a buffer
          * @param buffer The H5 buffer
          */
-        void writeFromBuffer(const H5Buffer &buffer);
+        void writeFromBuffer(const H5BufferConstView &buffer);
 
         /// Write an object to the buffer
-        template <typename T> void write(const UnderlyingType_t<T> &obj);
+        template <BufferWritable T>
+            requires WrapperTrait<T>
+        void write(const UnderlyingType_t<T> &obj);
+
+        /// Write an object to the buffer
+        template <BufferWritable T>
+            requires(!WrapperTrait<T>)
+        void write(const T &obj);
 
         /// Write a range of objects to the buffer
-        template <typename Iterator> void write(Iterator begin, Iterator end);
+        template <
+                std::input_iterator Iterator,
+                BufferWritable T = typename std::iter_value_t<Iterator>>
+        void write(Iterator begin, Iterator end);
 
         /// Set a single column to be the index
         void setIndex(const std::string &index);
@@ -93,7 +95,10 @@ namespace H5Composites {
         /// Set multiple columns to be the index
         void setIndex(const std::vector<std::string> &index);
 
-        void setAttribute(const std::string &name, const H5Buffer &value);
+        /// @brief Set a named attribute on the output dataset
+        /// @param name The attribute name
+        /// @param value The value to set
+        void setAttribute(const std::string &name, const H5BufferConstView &value);
 
     private:
         /// The data type
@@ -108,9 +113,9 @@ namespace H5Composites {
         std::size_t m_nInBuffer{0};
         /// The buffer
         SmartBuffer m_buffer;
-
-    }; //> end class Writer
+    };
 } // namespace H5Composites
 
-#include "H5Composites/Writer.icc"
-#endif //> !H5COMPOSITES_WRITER_H
+#include "H5Composites/Writer.ixx"
+
+#endif //>! H5COMPOSITES_WRITER_HXX

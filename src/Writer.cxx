@@ -1,6 +1,7 @@
-#include "H5Composites/Writer.h"
-#include "H5Composites/FixedLengthStringTraits.h"
-#include "H5Composites/FixedLengthVectorTraits.h"
+#include "H5Composites/Writer.hxx"
+#include "H5Composites/DTypeConversion.hxx"
+#include "H5Composites/traits/String.hxx"
+#include "H5Composites/traits/Vector.hxx"
 
 #include <cstring>
 
@@ -22,14 +23,10 @@ namespace H5Composites {
                 name, m_dtype, H5::DataSpace(1, startDimension, maxDimension), propList);
     }
 
-    Writer::Writer(Writer &&other) {
-        m_dtype = std::move(other.m_dtype);
-        m_cacheSize = other.m_cacheSize;
-        m_dataset = std::move(other.m_dataset);
-        m_offset = other.m_offset;
-        m_nInBuffer = other.m_nInBuffer;
-        m_buffer = std::move(other.m_buffer);
-        // Clear the other to prevent it from writing anything to the file
+    Writer::Writer(Writer &&other)
+            : m_dtype(std::move(other.m_dtype)), m_cacheSize(other.m_cacheSize),
+              m_dataset(std::move(other.m_dataset)), m_offset(other.m_offset),
+              m_nInBuffer(other.m_nInBuffer), m_buffer(std::move(other.m_buffer)) {
         other.clear();
     }
 
@@ -38,7 +35,12 @@ namespace H5Composites {
     void Writer::clear() {
         // Setting the buffer position back to 0 effectively discards the data we already have.
         // This is all technically contained in the buffer but will now be ignored by flush calls
-        // and overwritten by write calls
+        // and overwritten by write calls. The only thing we have to do after that is to delete the
+        // vlen data
+        hsize_t bufferSize = nInBuffer();
+        H5Dvlen_reclaim(
+                m_dtype.getId(), H5::DataSpace(1, &bufferSize).getId(), H5P_DEFAULT,
+                m_buffer.get());
         m_nInBuffer = 0;
     }
 
@@ -59,34 +61,32 @@ namespace H5Composites {
         H5::DataSpace targetSpace = m_dataset.getSpace();
         targetSpace.selectHyperslab(H5S_SELECT_SET, slabSize, offset);
         // Now write the data held in the buffer
-        m_dataset.write(buffer(), m_dtype, slabSpace, targetSpace);
+        m_dataset.write(m_buffer.get(), m_dtype, slabSpace, targetSpace);
         // Increment the offset and clear the buffer
         m_offset += m_nInBuffer;
         clear();
     }
 
-    void Writer::writeFromBuffer(const H5::DataType &dtype, const void *buffer) {
-        std::memcpy(
-                m_buffer.get(m_nInBuffer * m_dtype.getSize()),
-                dtype == m_dtype ? buffer : convert(buffer, dtype, m_dtype).get(),
-                m_dtype.getSize());
+    H5BufferConstView Writer::buffer() const {
+        hsize_t dims[1]{m_nInBuffer};
+        return {m_buffer.get(), H5::ArrayType(m_dtype, 1, dims)};
+    }
+
+    void Writer::writeFromBuffer(const H5BufferConstView &buffer) {
+        convert(buffer, H5BufferView(m_buffer.get(m_nInBuffer * m_dtype.getSize()), m_dtype));
         if (++m_nInBuffer == m_cacheSize)
             flush();
     }
 
-    void Writer::writeFromBuffer(const H5Buffer &buffer) {
-        writeFromBuffer(buffer.dtype(), buffer.get());
-    }
-
     void Writer::setIndex(const std::string &name) {
-        setAttribute("index", toBuffer<FLString>(name));
+        setAttribute("index", toBuffer(name));
     }
 
     void Writer::setIndex(const std::vector<std::string> &name) {
-        setAttribute("index", toBuffer<FLVector<FLString>>(name));
+        setAttribute("index", toBuffer(name));
     }
 
-    void Writer::setAttribute(const std::string &name, const H5Buffer &value) {
+    void Writer::setAttribute(const std::string &name, const H5BufferConstView &value) {
         m_dataset.createAttribute(name, value.dtype(), H5S_SCALAR)
                 .write(value.dtype(), value.get());
     }

@@ -120,6 +120,14 @@ namespace H5Composites {
         using H5BufferConstView::indexer;
 
     }; //> end class H5BufferView
+
+    template <WithH5DType T> requires (!WrapperTrait<T>) H5BufferView viewOf(T &value) {
+        return H5BufferView(&value, getH5DType(value));
+    }
+
+    template <WithH5DType T> requires (WrapperTrait<T>) H5BufferView viewOf(UnderlyingType_t<T> &value) {
+        return H5BufferView(&value, getH5DType(value));
+    }
 } // namespace H5Composites
 
 #endif //> !H5COMPOSITES_H5BUFFERVIEW_HXX

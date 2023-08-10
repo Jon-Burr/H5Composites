@@ -1,8 +1,8 @@
 #ifndef H5COMPOSITES_DTYPECONVERSION_HXX
 #define H5COMPOSITES_DTYPECONVERSION_HXX
 
-#include "H5Composites/H5BufferConstView.hxx"
 #include "H5Composites/H5Buffer.hxx"
+#include "H5Composites/H5BufferConstView.hxx"
 
 #include <map>
 #include <stdexcept>
@@ -53,12 +53,23 @@ namespace H5Composites {
      * @param targetDType The type of data to convert to
      * @param criteria Criteria to check if the conversion is safe
      * @exception H5::DataTypeIException The conversion would not be safe
-     * @return A SmartBuffer containing the new data.
+     * @return A H5Buffer containing the new data of the specified type
      *
-     * The returned buffer will be the same size as targetDType.getSize()
+     * If source and target types are the same the data is still copied
      */
     H5Buffer convert(
             const H5BufferConstView &source, const H5::DataType &targetDType,
+            const ConversionCriteria &criteria = {});
+
+    /**
+     * @brief Convert the provided data from the source datatype to the target datatype
+     * @param source Buffer holding the input data
+     * @param target Target buffer in which to place the converted data
+     * @param criteria Criteria to check if the conversion is safe
+     * @exception H5::DataTypeIException The conversion would not be safe
+     */
+    void convert(
+            const H5BufferConstView &source, H5BufferView target,
             const ConversionCriteria &criteria = {});
 } // namespace H5Composites
 

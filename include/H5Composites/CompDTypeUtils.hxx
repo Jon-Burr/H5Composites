@@ -15,6 +15,7 @@
 #include "H5Composites/BufferConstructTraits.hxx"
 #include "H5Composites/BufferReadTraits.hxx"
 #include "H5Composites/BufferWriteTraits.hxx"
+#include "H5Composites/H5DType.hxx"
 #include "H5Composites/UnderlyingType.hxx"
 
 #include "H5Cpp.h"
@@ -44,7 +45,9 @@ namespace H5Composites {
      * Each element of the range is a named field in the compound data type. The name of each field
      * will be set to 'element' plus the index of the element in the range.
      */
-    template <std::ranges::input_range Range> H5::CompType getCompoundDTypeFromRange(Range range);
+    template <std::ranges::input_range Range>
+        requires(WithH5DType<typename std::ranges::range_value_t<Range>>)
+    H5::CompType getCompoundDTypeFromRange(Range range);
 
     /**
      * @brief Get a H5 compound data type from a range of elements
@@ -59,7 +62,7 @@ namespace H5Composites {
      *
      * This version is only necessary if H5Composites::UnderlyingType_t<T> != T
      */
-    template <typename T, std::ranges::input_range Range>
+    template <WithH5DType T, std::ranges::input_range Range>
     H5::CompType getCompoundDTypeFromRange(Range range);
 
     /**
@@ -258,8 +261,7 @@ namespace H5Composites {
      * This version is only necessary if H5Composites::UnderlyingType_t<T> != T
      */
     template <BufferWritable T, std::ranges::input_range Range>
-    void writeRangeToCompoundDType(
-            Range range, void *buffer, const H5::CompType &dtype);
+    void writeRangeToCompoundDType(Range range, void *buffer, const H5::CompType &dtype);
 
     /**
      * @brief Get the pointer to the position in the buffer for the specified member

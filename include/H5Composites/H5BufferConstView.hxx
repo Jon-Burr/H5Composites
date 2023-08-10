@@ -7,6 +7,9 @@
 #ifndef H5COMPOSITES_CONSTH5BUFFERVIEW_HXX
 #define H5COMPOSITES_CONSTH5BUFFERVIEW_HXX
 
+#include "H5DType.hxx"
+#include "UnderlyingType.hxx"
+
 #include "H5Cpp.h"
 
 #include <compare>
@@ -143,6 +146,14 @@ namespace H5Composites {
         H5::DataType m_dtype;
 
     }; //> end class H5BufferView
+
+    template <WithH5DType T> requires (!WrapperTrait<T>) H5BufferConstView viewOf(const T &value) {
+        return H5BufferConstView(&value, getH5DType(value));
+    }
+
+    template <WithH5DType T> requires (WrapperTrait<T>) H5BufferConstView viewOf(const UnderlyingType_t<T> &value) {
+        return H5BufferConstView(&value, getH5DType(value));
+    }
 } // namespace H5Composites
 
 #endif //> !H5COMPOSITES_CONSTH5BUFFERVIEW_HXX
