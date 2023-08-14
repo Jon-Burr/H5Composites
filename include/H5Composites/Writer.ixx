@@ -14,7 +14,7 @@ namespace H5Composites {
     }
 
     /// Write a range of objects to the buffer
-    template <std::input_iterator Iterator, BufferWritable T = typename std::iter_value_t<Iterator>>
+    template <std::input_iterator Iterator, BufferWritable T>
     void Writer::write(Iterator begin, Iterator end) {
         for (auto itr = begin; itr != end; ++itr)
             write<T>(*itr);
