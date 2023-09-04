@@ -3,13 +3,14 @@
 namespace H5Composites {
 
     template <std::ranges::input_range Range>
-        requires(WithH5DType<typename std::ranges::range_value_t<Range>>) H5::CompType getCompoundDTypeFromRange(Range range) {
+        requires(WithH5DType<typename std::ranges::range_value_t<Range>>)
+    H5::CompType getCompoundDTypeFromRange(Range &&range) {
         return getCompoundDTypeFromRange<std::decay_t<std::ranges::range_reference_t<Range>>>(
                 range);
     }
 
     template <WithH5DType T, std::ranges::input_range Range>
-    H5::CompType getCompoundDTypeFromRange(Range range) {
+    H5::CompType getCompoundDTypeFromRange(Range &&range) {
         // First iterate through and get all of the data types
         std::size_t totalSize = 0;
         std::vector<H5::DataType> dtypes;

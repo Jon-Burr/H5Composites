@@ -1,6 +1,13 @@
 #include "H5Composites/CompDTypeUtils.hxx"
 
 namespace H5Composites {
+    std::vector<std::string> getCompoundElementNames(const H5::CompType &dtype) {
+        auto names = std::ranges::views::iota(0, dtype.getNmembers()) |
+                     std::ranges::views::transform(
+                             [&dtype](std::size_t idx) { return dtype.getMemberName(idx); });
+        return {std::ranges::begin(names), std::ranges::end(names)};
+    }
+
     H5::CompType createCompoundDType(
             const std::vector<std::pair<H5::DataType, std::string>> &components) {
         // First iterate through and get all of the data type sizes

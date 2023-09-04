@@ -7,12 +7,15 @@ target_sources(H5Composites
     traits/FixedLengthString.cxx
     traits/String.cxx
     ArrayDTypeUtils.cxx
+    CommonDTypeUtils.cxx
     CompDTypeUtils.cxx
+    DataSetUtils.cxx
     DTypeConversion.cxx
     DTypeIterator.cxx
     DTypePrecision.cxx
     DTypePrinting.cxx
     DTypeUtils.cxx
+    GroupWrapper.cxx
     H5Buffer.cxx
     H5BufferConstView.cxx
     H5BufferView.cxx

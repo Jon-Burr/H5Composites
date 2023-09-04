@@ -47,7 +47,7 @@ namespace H5Composites {
      */
     template <std::ranges::input_range Range>
         requires(WithH5DType<typename std::ranges::range_value_t<Range>>)
-    H5::CompType getCompoundDTypeFromRange(Range range);
+    H5::CompType getCompoundDTypeFromRange(Range &&range);
 
     /**
      * @brief Get a H5 compound data type from a range of elements
@@ -63,7 +63,10 @@ namespace H5Composites {
      * This version is only necessary if H5Composites::UnderlyingType_t<T> != T
      */
     template <WithH5DType T, std::ranges::input_range Range>
-    H5::CompType getCompoundDTypeFromRange(Range range);
+    H5::CompType getCompoundDTypeFromRange(Range &&range);
+
+    /// Get the names of all elements of this compound data type
+    std::vector<std::string> getCompoundElementNames(const H5::CompType &dtype);
 
     /**
      * @brief Read the element at the specified index from the composite data type
