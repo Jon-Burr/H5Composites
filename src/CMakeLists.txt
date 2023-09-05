@@ -22,6 +22,7 @@ target_sources(H5Composites
     H5DType.cxx
     H5Enum.cxx
     MergeFactory.cxx
+    Reader.cxx
     SmartBuffer.cxx
     TypeRegister.cxx
     VLenDeleter.cxx
