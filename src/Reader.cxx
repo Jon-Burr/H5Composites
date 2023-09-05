@@ -20,6 +20,14 @@ namespace H5Composites {
     Reader::Reader(const H5::DataSet &dataset, std::size_t cacheSize)
             : Reader(dataset.getDataType(), dataset, cacheSize) {}
 
+    Reader::~Reader() {
+        // Make sure we free any vlen memory
+        if (m_nInCache)
+            H5Dvlen_reclaim(
+                    m_dtype.getId(), H5::DataSpace(1, &m_nInCache).getId(), H5P_DEFAULT,
+                    m_buffer.get());
+    }
+
     H5BufferConstView Reader::next() {
         if (m_cachePosition == m_cacheSize) {
             // We've exhausted our cache
@@ -36,6 +44,7 @@ namespace H5Composites {
             m_offset += slabSize;
             m_nRemainingInDS -= slabSize;
             m_cachePosition = 0;
+            m_nInCache = slabSize;
         }
         std::size_t cacheOffset = m_cachePosition * m_dtype.getSize();
         ++m_cachePosition;

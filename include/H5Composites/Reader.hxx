@@ -28,6 +28,8 @@ namespace H5Composites {
         ///        use the dataset's chunk size.
         Reader(const H5::DataSet &dataset, std::size_t cacheSize = -1);
 
+        ~Reader();
+
         /// @brief The type read out into the cache
         const H5::DataType &dtype() const { return m_dtype; }
 
@@ -63,6 +65,7 @@ namespace H5Composites {
         /// The position in the cache
         std::size_t m_cachePosition{0};
         std::size_t m_nRemainingInDS{0};
+        hsize_t m_nInCache{0};
     };
 } // namespace H5Composites
 
