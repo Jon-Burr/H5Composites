@@ -80,12 +80,6 @@ namespace H5Composites {
         template <BufferWritable T>
             requires(!WrapperTrait<T>)
         void writeScalar(const std::string &name, const T &value);
-
-        /// @brief Create a handle to a scalar
-        /// @tparam T
-        /// @param name
-        /// @return
-        template <BufferWritable T> ScalarHandle<T> makeScalarHandle(const std::string &name);
         /// @}
 
         /// @brief Create a new dataset writer
