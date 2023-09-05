@@ -31,7 +31,7 @@ namespace H5Composites {
     template <typename T>
     concept WithDynamicH5DType = requires(const UnderlyingType_t<T> &t) {
         { H5DType<T>::getType(t) } -> std::convertible_to<H5::DataType>;
-    };
+    } && (!WithStaticH5DType<T>);
 
     template <typename T>
     concept WithH5DType = WithStaticH5DType<T> || WithDynamicH5DType<T>;
