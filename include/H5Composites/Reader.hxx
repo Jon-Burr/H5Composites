@@ -41,6 +41,8 @@ namespace H5Composites {
         H5BufferConstView next();
 
         /// @brief Read the next row of the dataset as the specified type
+        ///
+        /// Returns std::nullopt when the input dataset is exhausted
         template <BufferConstructible T> std::optional<UnderlyingType_t<T>> next() {
             if (H5BufferConstView view = next())
                 return fromBuffer<T>(view);
