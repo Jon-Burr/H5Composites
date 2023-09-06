@@ -7,7 +7,7 @@ before_script:
 pages:
   script:
     - doxygen doc/Doxyfile
-    - mv doxygen/generated/html public
+    - mv doc/generated/html public
   artifacts:
     paths:
       # The folder that contains the files to be exposed at the Page URL
