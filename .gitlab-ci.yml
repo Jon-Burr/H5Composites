@@ -6,8 +6,9 @@ before_script:
   - apk add doxygen
 pages:
   script:
-    - doxygen doc/Doxyfile
-    - mv doc/generated/html public
+    - cd doc
+    - doxygen Doxyfile
+    - mv generated/html ../public
   artifacts:
     paths:
       # The folder that contains the files to be exposed at the Page URL
