@@ -7,7 +7,7 @@
 
 namespace H5Composites {
     Writer::Writer(
-            H5::Group &targetGroup, const std::string &name, const H5::DataType &dtype,
+            const H5::Group &targetGroup, const std::string &name, const H5::DataType &dtype,
             std::size_t cacheSize, std::size_t chunkSize)
             : m_dtype(dtype), m_cacheSize(cacheSize), m_buffer(cacheSize * dtype.getSize()) {
         if (targetGroup.nameExists(name))

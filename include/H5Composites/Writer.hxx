@@ -32,7 +32,7 @@ namespace H5Composites {
          * @param chunkSize The number of objects to store per dataset chunk (if -1 set to the
          * cacheSize)
          */
-        Writer(H5::Group &targetGroup, const std::string &name, const H5::DataType &dtype,
+        Writer(const H5::Group &targetGroup, const std::string &name, const H5::DataType &dtype,
                std::size_t cacheSize = 2048, std::size_t chunkSize = -1);
 
         /// Move constructor

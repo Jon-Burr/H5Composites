@@ -19,7 +19,7 @@
 
 namespace H5Composites {
     template <WithStaticH5DType T> class TypedWriter : public Writer {
-        
+
     public:
         /**
          * @brief Construct a new Writer object
@@ -31,13 +31,14 @@ namespace H5Composites {
          * cacheSize)
          */
         TypedWriter(
-                H5::Group &targetGroup, const std::string &name, std::size_t cacheSize = 2048,
+                const H5::Group &targetGroup, const std::string &name, std::size_t cacheSize = 2048,
                 std::size_t chunkSize = -1)
                 : Writer(targetGroup, name, getH5DType<T>(), cacheSize, chunkSize) {}
 
         void write(const UnderlyingType_t<T> &obj) { Writer::write<T>(obj); }
 
-        template <std::input_iterator Iterator> requires (std::convertible_to<std::iter_value_t<Iterator>, T>)
+        template <std::input_iterator Iterator>
+            requires(std::convertible_to<std::iter_value_t<Iterator>, T>)
         void write(Iterator begin, Iterator end) {
             for (Iterator itr = begin; itr != end; ++itr)
                 write(*itr);
