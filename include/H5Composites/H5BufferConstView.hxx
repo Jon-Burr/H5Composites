@@ -156,7 +156,7 @@ namespace H5Composites {
     template <WithH5DType T>
         requires(WrapperTrait<T>)
     H5BufferConstView viewOf(const UnderlyingType_t<T> &value) {
-        return H5BufferConstView(&value, getH5DType(value));
+        return H5BufferConstView(&value, getH5DType<T>(value));
     }
 } // namespace H5Composites
 
