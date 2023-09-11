@@ -28,6 +28,7 @@
 #include <concepts>
 #include <limits>
 #include <map>
+#include <optional>
 #include <string>
 #include <type_traits>
 
@@ -37,7 +38,7 @@ namespace H5Composites {
         /// The type used for IDs
         struct id_t {
             H5COMPOSITES_IDTYPE value;
-            friend auto operator<=>(const id_t&, const id_t&) = default;
+            friend auto operator<=>(const id_t &, const id_t &) = default;
         };
         static_assert(std::is_integral_v<H5COMPOSITES_IDTYPE>, "The ID type must be an integer");
         static_assert(std::is_unsigned_v<H5COMPOSITES_IDTYPE>, "The ID type must be unsigned");
