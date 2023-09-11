@@ -19,20 +19,20 @@ namespace H5Composites {
     };
 
     template <WithStaticH5DType T> struct H5DType<FixedLengthVector<T>> {
-        static H5::ArrayType getType(const std::vector<UnderlyingType<T>> &value) {
+        static H5::ArrayType getType(const std::vector<UnderlyingType_t<T>> &value) {
             hsize_t size[1]{value.size()};
             return {getH5DType<T>(), 1, size};
         }
     };
 
     template <WithDynamicH5DType T> struct H5DType<FixedLengthVector<T>> {
-        static H5::CompType getType(const std::vector<UnderlyingType<T>> &value) {
+        static H5::CompType getType(const std::vector<UnderlyingType_t<T>> &value) {
             return getCompoundDTypeFromRange<T>(value.begin(), value.end());
         }
     };
 
     template <WithH5DType T> struct BufferReadTraits<FixedLengthVector<T>> {
-        static void read(std::vector<UnderlyingType<T>> &value, const H5BufferConstView &buffer) {
+        static void read(std::vector<UnderlyingType_t<T>> &value, const H5BufferConstView &buffer) {
             if constexpr (BufferReadIsCopy<T>)
                 if (buffer.dtype().getClass() == H5T_ARRAY) {
                     detail::ReadConversionHelper helper(buffer, getH5DType<FixedLengthVector<T>>());
@@ -48,7 +48,7 @@ namespace H5Composites {
     };
 
     template <WithH5DType T> struct BufferWriteTraits<FixedLengthVector<T>> {
-        static void write(const std::vector<UnderlyingType<T>> &value, H5BufferView buffer) {
+        static void write(const std::vector<UnderlyingType_t<T>> &value, H5BufferView buffer) {
             if constexpr (BufferWriteIsCopy<T>) {
                 const void *ptr = value.data();
                 H5Buffer tmp;
@@ -57,15 +57,14 @@ namespace H5Composites {
                     ptr = tmp.get();
                 }
                 std::memcpy(buffer.get(), ptr, buffer.footprint());
-            }
-            else if (value.size() != buffer.size())
-                throw InvalidConversionError(getH5DType<FixedLengthVector<T>>(value), buffer.dtype());
+            } else if (value.size() != buffer.size())
+                throw InvalidConversionError(
+                        getH5DType<FixedLengthVector<T>>(value), buffer.dtype());
             else {
                 auto itr = value.begin();
                 for (H5BufferView element : buffer)
                     BufferReadTraits<T>::write(*itr++, element);
             }
-
         }
     };
 } // namespace H5Composites
