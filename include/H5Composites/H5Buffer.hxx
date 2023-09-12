@@ -75,6 +75,18 @@ namespace H5Composites {
         SmartBuffer m_buffer;
         VLenDeleter m_vlenDeleter;
     }; //> end class H5Buffer
+
+    template <WithH5DType T>
+        requires(!WrapperTrait<T>)
+    H5BufferConstView copy(const T &value) {
+        return H5Buffer(SmartBuffer::copyValue(value), getH5DType(value));
+    }
+
+    template <WithH5DType T>
+        requires(WrapperTrait<T>)
+    H5BufferConstView copyOf(const UnderlyingType_t<T> &value) {
+        return H5Buffer(SmartBuffer::copyValue(value), getH5DType<T>(value));
+    }
 } // namespace H5Composites
 
 #endif //> !H5COMPOSITES_H5BUFFER_HXX
