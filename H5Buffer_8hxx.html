@@ -74,7 +74,8 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a>  </div>
+<a href="#nested-classes">Classes</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">H5Buffer.hxx File Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -93,6 +94,19 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classH5Composites_1_1H5Buffer.html">H5Composites::H5Buffer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">RAII behaviour for a memory buffer containing the data for an instance of a H5::DataType.  <a href="classH5Composites_1_1H5Buffer.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:af712e1676698c56a1e5dc2cffe227eb7" id="r_af712e1676698c56a1e5dc2cffe227eb7"><td class="memTemplParams" colspan="2"><a id="af712e1676698c56a1e5dc2cffe227eb7" name="af712e1676698c56a1e5dc2cffe227eb7"></a>
+template&lt;WithH5DType T&gt; <br />
+requires (!WrapperTrait&lt;T&gt;)</td></tr>
+<tr class="memitem:af712e1676698c56a1e5dc2cffe227eb7"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classH5Composites_1_1H5BufferConstView.html">H5BufferConstView</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><b>H5Composites::copy</b> (const T &amp;value)</td></tr>
+<tr class="separator:af712e1676698c56a1e5dc2cffe227eb7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad8fb4236649f77db571fb48171b8889c" id="r_ad8fb4236649f77db571fb48171b8889c"><td class="memTemplParams" colspan="2"><a id="ad8fb4236649f77db571fb48171b8889c" name="ad8fb4236649f77db571fb48171b8889c"></a>
+template&lt;WithH5DType T&gt; <br />
+requires (WrapperTrait&lt;T&gt;)</td></tr>
+<tr class="memitem:ad8fb4236649f77db571fb48171b8889c"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classH5Composites_1_1H5BufferConstView.html">H5BufferConstView</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><b>H5Composites::copyOf</b> (const UnderlyingType_t&lt; T &gt; &amp;value)</td></tr>
+<tr class="separator:ad8fb4236649f77db571fb48171b8889c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Provide RAII behaviour for a memory buffer holding the data for an instance of a H5 data type. </p>
