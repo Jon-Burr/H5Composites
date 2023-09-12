@@ -9,7 +9,8 @@ var indexSectionsWithContent =
   6: "e",
   7: "abcefisv",
   8: "h",
-  9: "h"
+  9: "h",
+  10: "h"
 };
 
 var indexSectionNames =
@@ -23,7 +24,8 @@ var indexSectionNames =
   6: "enums",
   7: "enumvalues",
   8: "defines",
-  9: "concepts"
+  9: "pages",
+  10: "concepts"
 };
 
 var indexSectionLabels =
@@ -37,6 +39,7 @@ var indexSectionLabels =
   6: "Enumerations",
   7: "Enumerator",
   8: "Macros",
-  9: "Concepts"
+  9: "Pages",
+  10: "Concepts"
 };
 
