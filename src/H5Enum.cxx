@@ -34,4 +34,10 @@ namespace H5Composites {
             value.push_back(getEnumNameByIndex(dtype, idx, startSize));
         return value;
     }
+
+    H5Buffer getEnumValue(const H5::EnumType &dtype, const std::string &name) {
+        H5Buffer buffer(dtype);
+        dtype.valueOf(name, buffer.get());
+        return buffer;
+    }
 } // namespace H5Composites

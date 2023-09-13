@@ -3,6 +3,7 @@
 
 #include "H5Cpp.h"
 
+#include "H5Composites/H5Buffer.hxx"
 #include "H5Composites/H5BufferConstView.hxx"
 
 #include <string>
@@ -32,6 +33,14 @@ namespace H5Composites {
      * @return The names
      */
     std::vector<std::string> getEnumNames(const H5::EnumType &dtype, std::size_t startSize = 128);
+
+    /**
+     * @brief Get the value of an enum member
+     *
+     * @param dtype The enum datatype
+     * @param name The name of the member
+     */
+    H5Buffer getEnumValue(const H5::EnumType &dtype, const std::string &name);
 
 } // namespace H5Composites
 
