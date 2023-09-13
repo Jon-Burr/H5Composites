@@ -79,6 +79,9 @@ namespace H5Composites {
         void *get();
         using H5BufferConstView::get;
 
+        /// @brief Set the value held by this buffer from the one in the other
+        void set(const H5BufferConstView &value);
+
         /// @brief Interpret the memory buffer as the specified type
         ///
         /// The type must fill the entire footprint
@@ -121,11 +124,15 @@ namespace H5Composites {
 
     }; //> end class H5BufferView
 
-    template <WithH5DType T> requires (!WrapperTrait<T>) H5BufferView viewOf(T &value) {
+    template <WithH5DType T>
+        requires(!WrapperTrait<T>)
+    H5BufferView viewOf(T &value) {
         return H5BufferView(&value, getH5DType(value));
     }
 
-    template <WithH5DType T> requires (WrapperTrait<T>) H5BufferView viewOf(UnderlyingType_t<T> &value) {
+    template <WithH5DType T>
+        requires(WrapperTrait<T>)
+    H5BufferView viewOf(UnderlyingType_t<T> &value) {
         return H5BufferView(&value, getH5DType<T>(value));
     }
 } // namespace H5Composites

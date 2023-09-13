@@ -1,4 +1,5 @@
 #include "H5Composites/H5BufferView.hxx"
+#include "H5Composites/DTypeConversion.hxx"
 
 #include <stdexcept>
 
@@ -82,6 +83,13 @@ namespace H5Composites {
     H5BufferView::H5BufferView(H5BufferView &other) : H5BufferView(other.get(), other.dtype()) {}
 
     void *H5BufferView::get() { return const_cast<void *>(H5BufferConstView::get()); }
+
+    void H5BufferView::set(const H5BufferConstView &other) {
+        if (other.dtype() == dtype())
+            std::memcpy(get(), other.get(), footprint());
+        else
+            convert(other, *this);
+    }
 
     void *H5BufferView::getOffset(std::size_t offset) {
         return const_cast<void *>(H5BufferConstView::getOffset(offset));
